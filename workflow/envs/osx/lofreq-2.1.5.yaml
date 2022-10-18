@@ -1,0 +1,35 @@
+name: lofreq-2.1.5
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - bzip2=1.0.8=h0d85af4_4
+  - c-ares=1.18.1=h0d85af4_0
+  - ca-certificates=2022.6.15=h033912b_0
+  - htslib=1.14=hefe9584_1
+  - krb5=1.19.3=hb98e516_0
+  - libcurl=7.83.1=h23f1065_0
+  - libcxx=14.0.5=hce7ea42_1
+  - libdeflate=1.9=h0d85af4_0
+  - libedit=3.1.20191231=h0678c8f_2
+  - libev=4.33=haf1e3a3_1
+  - libffi=3.4.2=h0d85af4_5
+  - libnghttp2=1.47.0=hca56917_0
+  - libssh2=1.10.0=hd3787cc_2
+  - libzlib=1.2.12=hfe4f2af_1
+  - lofreq=2.1.5=py39h704b1a9_6
+  - ncurses=6.3=h96cf925_1
+  - openssl=3.0.3=hfe4f2af_0
+  - pip=22.1.2=pyhd8ed1ab_0
+  - python=3.9.13=hf8d34f4_0_cpython
+  - python_abi=3.9=2_cp39
+  - readline=8.1.2=h3899abd_0
+  - samtools=1.15=hb35f05f_0
+  - setuptools=62.6.0=py39h6e9494a_0
+  - sqlite=3.38.5=hd9f0692_0
+  - tk=8.6.12=h5dbffcc_0
+  - tzdata=2022a=h191b570_0
+  - wheel=0.37.1=pyhd8ed1ab_0
+  - xz=5.2.5=haf1e3a3_1
+  - zlib=1.2.12=hfe4f2af_1

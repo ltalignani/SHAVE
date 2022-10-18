@@ -1,0 +1,8 @@
+name: bwa-0.7.17
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - bwa=0.7.17=h188c3c3_8
+  - perl=5.26.2=h4e221da_0
+  - zlib=1.2.12=h4dc903c_2

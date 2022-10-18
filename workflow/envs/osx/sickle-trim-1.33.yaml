@@ -1,0 +1,7 @@
+name: sickle-trim-1.33
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - sickle-trim=1.33=h188c3c3_6
+  - zlib=1.2.12=h4dc903c_2

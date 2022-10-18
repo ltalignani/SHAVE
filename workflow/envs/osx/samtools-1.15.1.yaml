@@ -1,0 +1,24 @@
+name: samtools-1.15.1
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - bzip2=1.0.8=h0d85af4_4
+  - c-ares=1.18.1=h0d85af4_0
+  - ca-certificates=2022.6.15=h033912b_0
+  - htslib=1.15.1=hc057d7f_0
+  - krb5=1.19.3=hb98e516_0
+  - libcurl=7.83.1=h23f1065_0
+  - libcxx=14.0.5=hce7ea42_1
+  - libdeflate=1.10=h0d85af4_0
+  - libedit=3.1.20191231=h0678c8f_2
+  - libev=4.33=haf1e3a3_1
+  - libnghttp2=1.47.0=hca56917_0
+  - libssh2=1.10.0=hd3787cc_2
+  - libzlib=1.2.12=hfe4f2af_1
+  - ncurses=6.3=h96cf925_1
+  - openssl=3.0.3=hfe4f2af_0
+  - samtools=1.15.1=h9f30945_0
+  - xz=5.2.5=haf1e3a3_1
+  - zlib=1.2.12=hfe4f2af_1

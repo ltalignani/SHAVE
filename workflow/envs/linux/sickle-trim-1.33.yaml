@@ -1,0 +1,11 @@
+name: sickle-trim-1.33
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=5.1=1_gnu
+  - libgcc-ng=11.2.0=h1234567_1
+  - libgomp=11.2.0=h1234567_1
+  - sickle-trim=1.33=h5bf99c6_6
+  - zlib=1.2.12=h7f8727e_2
