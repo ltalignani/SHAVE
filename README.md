@@ -178,12 +178,13 @@ This is the main results :
 - _cutadapt/ directory: paired reads, without adapters (default config: tempdir, removed, save disk usage)_
 
 ### 02_Mapping ###
-- **markdup.bam**: read alignments, in _bam_ format _(can be visualized in, i.e. IGV)_
+- **markdup.bam**: read alignments, MD/NM tagged in _bam_ format _(can be visualized in, i.e. IGV)_
 - **markdup.bai**: bam indexes _bai_ use in i.e. IGV with _./resources/genomes/AalbF3.fasta_
 - _mapped.sam_: (default config: tempdir, removed, save disk usage)_
 - _sortbynames.bam_: (default config: tempdir, removed, save disk usage)_
 - _fixmate.bam_: (default config: tempdir, removed, save disk usage)_
 - _sorted.bam_: (default config: tempdir, removed, save disk usage)_
+- _sorted_MD.bam_ : (default config: tempdir, removed, save disk usage)_
 
 ### 03_Coverage ###
 - **coverage-stats.tsv**: information about genome coverage, in _tsv_ format containing mean coverage depth across all genome reference sequence, standard deviation for mean-depth and genome reference coverage percentage at at-least n X of depth.
@@ -193,13 +194,21 @@ This is the main results :
 - **maskedref.fasta.fai**: reference sequence indexes, masked for low coverages regions, in _fai_ format
 - **indelqual.bam**: read alignments with indel qualities, in _bam_ format _(can be visualized in, i.e. IGV)_
 - **indelqual.bai**: bam indexes _bai_ use in i.e. IGV with _./results/04_Variants/maskedref.fasta_
+
+**realignedtargetcreator** directory:
+
+- **.intervals** : RealignerTargetCreator intervals file for IndelRealigner, in _intervals_ format
+
+**unifiedgenotyper** directory:
+
 - **variantcall.vcf**: SNVs and Indels calling in _vcf_ format
 - **variantfilt.vcf**: SNVs and Indels passing filters, in _vcf_ format
-- **variantfilt.vcf.bgz**: SNVs and Indels passing filters archive, in _vcf.bgz_ format
-- **variantfilt.vcf.bgz.tbi**: SNVs and Indels passing filters archive indexed, in _vcf.bgz.tbi_ format
+- **variantfilt.vcf.gz**: SNVs and Indels passing filters archive, in _vcf.bgz_ format
+- **variantfilt.vcf.gz.tbi**: SNVs and Indels passing filters archive indexed, in _vcf.bgz.tbi_ format
 
 ### 05_Validation ###
 - **mark-dup.txt**: statistics of all reads, produced by samtools stats, in _txt_ format
+- **realign_fix-mate_sorted.bam**: realigned, fix-mate bam, in _bam_ format
 
 ### 10_graphs ###
 - **dag**: directed acyclic graph of jobs, in _pdf_ and _png_ formats

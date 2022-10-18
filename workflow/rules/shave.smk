@@ -570,7 +570,7 @@ rule samtools_calmd:
     input:
         sorted = "results/02_Mapping/{sample}_{aligner}_sorted.bam"
     output:
-        calmd = "results/02_Mapping/{sample}_{aligner}_sorted_MD.bam"
+        calmd = temp("results/02_Mapping/{sample}_{aligner}_sorted_MD.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_sorted.log"
     shell:
