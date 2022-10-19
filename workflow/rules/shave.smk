@@ -75,7 +75,7 @@ SENSITIVITY = config["bowtie2"]["sensitivity"]      # Bowtie2 sensitivity preset
 
 REFPATH = config["consensus"]["path"]               # Path to genomes references
 REFERENCE = config["consensus"]["reference"]        # Genome reference sequence, in fasta format
-ALLELES = config["alleles"]["known_sites"]          # Known allele sites, in VCF format 
+ALLELES = config["alleles"]["alleles_target"]          # Alleles against which to genotype (VCF format) 
 MINCOV = config["consensus"]["mincov"]              # Minimum coverage, mask lower regions with 'N'
 MINAF = config["consensus"]["minaf"]                # Minimum allele frequency allowed
 IUPAC = config["consensus"]["iupac"]                # Output variants in the form of IUPAC ambiguity codes
@@ -237,17 +237,18 @@ rule awk_intervals_for_IGV:
         GAWK
     input:
         intervals="results/04_Variants/realignertargetcreator/{sample}_{aligner}_{mincov}X.intervals"
+    params:
+        cmd = r"""BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}"""
     output:
         bed = "results/03_Coverage/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed"
     log:
         "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_min-cov-filt.log"
     shell:
         "awk -F '[:-]' "                # Awk, a program that you can use to select particular records in a file and perform operations upon them
-        "{AWK_CMD_INTERVALS:q} "        # :q : is asking snakemake to quote the awk command for me. 
+        "{params.cmd} "                 # {AWK_CMD_INTERVALS:q} :q : is asking snakemake to quote the awk command for me. 
         "{input.intervals} "            # Intervals input
         "1> {output.bed} "              # BedGraph output
         "2> {log} "                     # Log redirection
-
 
 ###############################################################################
 rule realignertargetcreator:
@@ -261,8 +262,8 @@ rule realignertargetcreator:
     #           -o 7156_realignertargetcreator.intervals
     message:
         "RealignerTargetCreator creates a target intervals file for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
-    #conda:
-    #    GATK
+    conda:
+        GATK
     input:
         reference = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
         bam = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",

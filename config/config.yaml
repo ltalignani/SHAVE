@@ -80,7 +80,7 @@ consensus:
 
 ### KNWON VARIATION SITES ----------------------------------------------------------------------------
 alleles:
-  known_sites: "resources/alleles/"
+  alleles_target: "resources/alleles/populations.snps.sort.vcf.gz"
 
 ### BWA ----------------------------------------------------------------------------------------------
 bwa:
