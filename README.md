@@ -286,8 +286,10 @@ To select one or both, de/comment (#) as you wish:
 
 ### Directories tree structure ###
 ```shell
-🖥️️  GeVarLi.sh
+🖥️️ Start_shave.sh
+🖥️️ Start_unifiedgenotyper.sh
 📚 README.md
+🍜 snakemake.yaml
 📂 visuals/
  └── 📈 rulegraph.png
 📂 config/
@@ -302,13 +304,10 @@ To select one or both, de/comment (#) as you wish:
  │    └── 📂 bwa/
  │         ├── 🗂️ AalbF3
  │         ├── 🗂️ Adapters
- │         
  └── 📂 reads/  
  │    ├── 🛡️ .gitkeep
- │    ├── 📦 Sample-A_R1.fastq.gz
- │    ├── 📦 Sample-A_R2.fastq.gz
- │	   ├── 📦 Sample-B_R1.fastq.gz
- │    └── 📦 Sample-B_R2.fastq.gz
+ │    ├── 📦 ERR3343471_R1.fastq.gz
+ │    ├── 📦 ERR3343471_R2.fastq.gz
 📂 workflow/
  ├── 📂 envs/
  │    ├── 🍜 bcftools-1.14.yaml
@@ -326,7 +325,8 @@ To select one or both, de/comment (#) as you wish:
  │    ├── 🍜 samtools-1.14.yaml
  │    └── 🍜 sickle-trim-1.33.yaml
  └── 📂 rules/
-      └── 📜 shave.smk
+      └── 📜 shave.smk
+      └── 📜 unifiedgenotyper.smk
 ```
 
 ## ~ SUPPORT ~ ##

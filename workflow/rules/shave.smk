@@ -86,7 +86,7 @@ IUPAC = config["consensus"]["iupac"]                # Output variants in the for
 # Output Field Separator = <tab>. if the third column is empty, print col 1, col 2 -1 (transform coordinates from 1-based to 0-based for IGV) and col 2.  
 # else, print the three column and transform the second one in 0-based coordinates.
 # look for "robust quoting for snakemake for more info".
-AWK_CMD_INTERVALS = r"""BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}"""
+#AWK_CMD_INTERVALS = r"""BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}"""
 
 ###############################################################################
 rule all:
