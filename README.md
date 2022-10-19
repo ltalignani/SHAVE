@@ -23,7 +23,7 @@ However, unlike SHAVE which uses HaplotypeCaller to call variants and obtain gen
 
 UnifiedGenotyper is used away from SHAVE because of a still unresolved bug caused by this program under snakemake. For this reason, it is part of a second pipeline named after it, in charge of calling variants and genotypes, performing hard-filtering according to a user-defined parameterization, compressing the resulting VCF and extracting a consensus sequence in .fasta format **AFTER running SHAVE and only after it as finished**. SHAVE generates all the files needed for UnifiedGenotyper to work properly, so you have to wait until SHAVE has finished.
 
-If you want to use a more modern way of calling variants, use [**SHAVE**](https://github.com/ltalignani/SHAVE). 
+If you want to use a more modern way of calling variants, use [**SHAVE2**](https://github.com/ltalignani/SHAVE2). 
 
 If you want to compare your results to those obtained by MalariaGEN, you are in the right place: these pipelines are made for you.
 
