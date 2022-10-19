@@ -34,7 +34,7 @@ conda:
     samtools: "../envs/osx/samtools-1.15.1.yaml" # Samtools     ver. 1.15.1
     sickle-trim: "../envs/osx/sickle-trim-1.33.yaml" # Sickle-trim  ver. 1.33
     gatk: "../envs/osx/gatk-3.8.yaml" # gatk ver. 3.8
-    gatk4: "../envs/osx/gatk-4.0.5.1.yaml" # gatk ver. 4.0.5.1
+    gatk4: "../envs/osx/gatk-4.3.0.0.yaml" # gatk ver. 4.0.5.1
     picard: "../envs/osx/picard-2.27.4.yaml" # picard ver. 2.27.4
   Linux: # Conda Linux environement yaml files:
     bcftools: "../envs/linux/bcftools-1.15.1.yaml" # Bcftools     ver. 1.15.1

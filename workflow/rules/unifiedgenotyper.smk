@@ -6,7 +6,8 @@
 # Date:                 2022.10.05
 # Run:                  snakemake --snakefile shave.smk --cores X --use-conda
 # Latest modification:  2022.10.07
-# Done:                 Added HaplotypeCaller, GenotypeGVCFs, VariantFiltration
+# Done:                 Added RealignerTargetCreator, IndelRealigner, 
+#                       UnifiedGenotyper
 
 ###############################################################################
 # PUBLICATIONS #
@@ -220,19 +221,18 @@ rule unifiedgenotyper:
     #       --out {output VCF} \
     message:
         "UnifiedGenotyper calling SNVs for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
-    #conda:
-    #    GATK
+    conda:
+        GATK
     input:
-        bam = "results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign_fix-mate.bam",
-        ref = REFPATH,
+        bam = "results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
+        ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
         alleles = ALLELES
     output:
         vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{mincov}X_indels.vcf"
     log:
         "results/11_Reports/unifiedgenotyper/{sample}_{aligner}_{mincov}X.log"
     shell:
-        "gatk3 "                                        # Genome Analysis Tool Kit - Broad Institute
-        "-T UnifiedGenotyper "                          # UnifiedGenotyper
+        "gatk3 -T UnifiedGenotyper "                    # Genome Analysis Tool Kit - Broad Institute UnifiedGenotyper
         "-I {input.bam} "                               # Input indel realigned BAM file
         "--alleles {input.alleles} "                    # Alleles against which to genotype (VCF format). Given the sites VCF file is fixed for every sample, and we wish to generalise to future sets of sites/alleles, the VCF file describing sites and alleles should be considered a parameter. This file for A. gambiae (AgamP4) is available at
         "-R {input.ref} "                               # Reference sequence in fasta format
