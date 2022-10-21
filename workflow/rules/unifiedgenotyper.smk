@@ -48,6 +48,7 @@ BCFTOOLS = config["conda"][OS]["bcftools"]          # BcfTools
 GAWK = config["conda"][OS]["gawk"]                  # Gawk
 LOFREQ = config["conda"][OS]["lofreq"]              # LoFreq
 GATK = config["conda"][OS]["gatk"]                  # GATK 3.8
+GATK4 = config["conda"][OS]["gatk4"]                # GATK 4.3.0
 PICARD = config["conda"][OS]["picard"]              # Picard 2.18.7
 
 ###############################################################################
@@ -92,6 +93,8 @@ rule all:
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         consensus = expand("results/06_Consensus/{sample}_{aligner}_{mincov}X_consensus.fasta",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
+        index = expand("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai",
+                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV)
 
 ###############################################################################
 rule sed_rename_headers:
@@ -124,8 +127,8 @@ rule bcftools_consensus:
         iupac = IUPAC
     input:
         maskedref = "results/04_Variants/{sample}_{aligner}_{mincov}X_masked-ref.fasta",
-        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.bgz",
-        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.bgz.tbi"
+        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.gz",
+        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.gz.tbi"
     output:
         constmp = temp("results/06_Consensus/{sample}_{aligner}_{mincov}X_consensus.fasta.tmp")
     log:
@@ -148,9 +151,9 @@ rule tabix_tabarch_indexing:
     conda:
         SAMTOOLS
     input:
-        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.bgz"
+        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.gz"
     output:
-        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.bgz.tbi"
+        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.gz.tbi"
     log:
         "results/11_Reports/tabix/{sample}_{aligner}_{mincov}X_variant-archive-index.log"
     shell:
@@ -161,28 +164,28 @@ rule tabix_tabarch_indexing:
         "2> {log}"           # Log redirection
 
 ###############################################################################
-rule bgzip_variant_archive:
+rule bcftools_variant_filt_archive:
     # Aim: Variant block compressing
     # Use: bgzip [OPTIONS] -c -@ [THREADS] [INDEL.vcf] 1> [COMPRESS.vcf.bgz]
     message:
         "Bgzip variant block compressing for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
     conda:
-        SAMTOOLS
+        BCFTOOLS
     resources:
         cpus = CPUS
     input:
-        variantfilt = "results/04_Variants/variantfiltration/{sample}_{aligner}_{mincov}X_hardfiltered.vcf.gz"                  #results/04_Variants/lofreq/{sample}_{aligner}_{mincov}X_variant-filt.vcf"
+        variantfilt = "results/04_Variants/variantfiltration/{sample}_{aligner}_{mincov}X_hardfiltered.vcf"                  #results/04_Variants/lofreq/{sample}_{aligner}_{mincov}X_variant-filt.vcf"
     output:
-        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.bgz"
+        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.gz"
     log:
-        "results/11_Reports/bgzip/{sample}_{aligner}_{mincov}X_variant-archive.log"
+        "results/11_Reports/bcftools/{sample}_{aligner}_{mincov}X_variant-archive.log"
     shell:
-        "bgzip "                      # Bgzip, block compression/decompression utility
-        "--stdout "                   # -c: Write to standard output, keep original files unchanged
-        "--threads {resources.cpus} " # -@: Number of threads to use (default: 1)
-        "{input.variantfilt} "        # VCF input file, gzip suuported, no streaming supported
-        "1> {output.archive} "        # VCF output file, gzip supported (default: standard output)
-        "2> {log}"                    # Log redirection
+        "bcftools "                         # bcftools,  a set of utilities that manipulate variant calls in the Variant Call Format (VCF).
+        "view "                             # view : subset, filter and convert VCF and BCF files
+        "--threads {resources.cpus} "       # -@: Number of threads to use (default: 1)
+        "{input.variantfilt} "              # VCF input file,
+        "-Oz -o {output.archive} "          # -O[z|b]: output-type -o: VCF output file,
+        "&> {log}"                          # Log redirection
 
 ###############################################################################
 rule hard_filter_calls:
@@ -194,6 +197,8 @@ rule hard_filter_calls:
     # -O output.vcf.gz
     message:
         "GenotypeGVCFs calling genotypes for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
+    conda:
+        GATK4
     input:
         ref=REFPATH,
         vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{mincov}X_indels.vcf",
@@ -216,7 +221,7 @@ rule unifiedgenotyper:
     # Use:  java -jar GenomeAnalysisTK.jar \ 
     #       -T UnifiedGenotyper \
     #       -I {sample BAM} \
-    #       --alleles {alleles VCF} \
+    #       --alleles {alleles VCF} \ : This option has been removed for the moment.  Alleles against which to genotype (VCF format). Given the sites VCF file is fixed for every sample, and we wish to generalise to future sets of sites/alleles, the VCF file describing sites and alleles should be considered a parameter. This file for A. gambiae (AgamP4) is available at
     #       -R {reference sequence} \
     #       --out {output VCF} \
     message:
@@ -226,7 +231,7 @@ rule unifiedgenotyper:
     input:
         bam = "results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
         ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        alleles = ALLELES
+        #alleles = ALLELES
     output:
         vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{mincov}X_indels.vcf"
     log:
@@ -234,7 +239,6 @@ rule unifiedgenotyper:
     shell:
         "gatk3 -T UnifiedGenotyper "                    # Genome Analysis Tool Kit - Broad Institute UnifiedGenotyper
         "-I {input.bam} "                               # Input indel realigned BAM file
-        "--alleles {input.alleles} "                    # Alleles against which to genotype (VCF format). Given the sites VCF file is fixed for every sample, and we wish to generalise to future sets of sites/alleles, the VCF file describing sites and alleles should be considered a parameter. This file for A. gambiae (AgamP4) is available at
         "-R {input.ref} "                               # Reference sequence in fasta format
         "--out {output.vcf} "                           # Output VCF
         "--genotype_likelihoods_model BOTH "            # Genotype likelihoods calculation model to employ -- BOTH is the default option, while INDEL is also available for calling indels and SNP is available for calling SNPs only (SNP|INDEL|BOTH)

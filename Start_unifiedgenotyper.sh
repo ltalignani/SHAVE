@@ -26,7 +26,7 @@ echo -e "${blue}Author${nc} ________________ Loïc Talignani"
 echo -e "${blue}Affiliation${nc} ___________ UMR_MIVEGEC"
 echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment for ${red}VE${nc}ctor v.2 pipeline"
 echo -e "${blue}Date${nc} __________________ 2022.10.05"
-echo -e "${blue}Run${nc} ___________________ bash Start_shave.sh"
+echo -e "${blue}Run${nc} ___________________ bash Start_unifiedgenotyper.sh"
 echo -e "${blue}Latest Modification${nc} ___ "
 
 
@@ -343,19 +343,8 @@ echo "Min. Coverage _________ ${min_cov}" >> ${workdir}/results/11_Reports/setti
 echo "Min. Allele Frequency _ ${min_af}" >> ${workdir}/results/11_Reports/settings.log                                                      # Log user config snvs cov min
 echo "Start Time ____________ ${time_stamp_start}" >> ${workdir}/results/11_Reports/settings.log                                            # Log analyzes starting time
 
-
-###### Concatenate all consensus fasta ######
-echo ""
-echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}#####${nc} ${red}CONCATENATE FASTA FILES${nc} ${green}#####${nc}"
-echo -e "${green}-----------------------------------${nc}"
-echo ""
-
-cat ${workdir}/results/05_Consensus/*_consensus.fasta > ${workdir}/results/All_consensus_sequences.fasta
-
 # and copy multiqc_report.html to results/ dir root
 cp ${workdir}/results/00_Quality_Control/multiqc/multiqc_report.html ${workdir}/results/All_readsQC_reports.html
-
 
 ###### Concatenate all coverage stats ######
 echo ""
