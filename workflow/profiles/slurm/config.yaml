@@ -20,7 +20,7 @@ default-resources:
   - account='$ACCOUNT'
   - partition='$PARTITION'
   - tmpdir=system_tmpdir
-  - threads=12
+  - threads=24
   - mem_mb=8000*threads
   - out='cluster_logs/slurm-%x-%j-%N.out'
   - err='cluster_logs/slurm-%x-%j-%N.err'

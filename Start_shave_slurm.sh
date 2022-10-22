@@ -1,4 +1,26 @@
 #!/bin/bash
+###################configuration slurm##############################
+#SBATCH -A talignani
+#SBATCH --job-name=shave
+#SBATCH --time=6-23:00:00
+#SBATCH -p normal
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem=64GB
+#SBATCH -o cluster_logs/slurm-%x-%j-%N.out
+#SBATCH -e cluster_logs/slurm-%x-%j-%N.err
+#SBATCH --mail-user=loic.talignani@ird.fr
+#SBATCH --mail-type=ALL
+###################################################################
+
+# USAGE: sbatch Start_shave_slurm.sh
+
+# set umask to avoid locking each other out of directories
+umask 002
+
+# get variables from workflow/variables.env
+source workflow/variables.env
 
 ###### Required for local computing ######
 # For Mac with Apple Silicon processors, create a new empty osx-64 specific environment :

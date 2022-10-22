@@ -1,11 +1,34 @@
 #!/bin/bash
+###################configuration slurm##############################
+#SBATCH -A talignani
+#SBATCH --job-name=UnifiedGenotyper
+#SBATCH --time=6-23:00:00
+#SBATCH -p normal
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem=64GB
+#SBATCH -o cluster_logs/slurm-%x-%j-%N.out
+#SBATCH -e cluster_logs/slurm-%x-%j-%N.err
+#SBATCH --mail-user=loic.talignani@ird.fr
+#SBATCH --mail-type=ALL
+###################################################################
 
-###### Required for local computing ######
+# USAGE: sbatch Start_unifiedgenotyper_slurm.sh
+
+# set umask to avoid locking each other out of directories
+umask 002
+
+# get variables from workflow/variables.env
+source workflow/variables.env
+
+###### Rquired ######
 # For Mac with Apple Silicon processors, create a new empty osx-64 specific environment :
 # conda deactivate base
 # CONDA_SUBDIR=osx-64 conda create -n shave
 # conda activate shave
 # conda config --env --set subdir osx-64
+
 
 ##### Colors ######
 red="\033[1;31m"   # red
@@ -20,13 +43,13 @@ echo -e "${green}---------------------------------------------------------------
 echo -e "${green}#####${nc} ${red}ABOUT${nc} ${green}#####${nc}"
 echo -e "${green}-----------------${nc}"
 echo ""
-echo -e "${blue}Name${nc} __________________ Start_shave.sh"
+echo -e "${blue}Name${nc} __________________ Start_unifiedgenotyper.sh"
 echo -e "${blue}Author${nc} ________________ Loïc Talignani"
 echo -e "${blue}Affiliation${nc} ___________ UMR_MIVEGEC"
-echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment pipeline for ${red}VE${nc}ctor v.1"
+echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment for ${red}VE${nc}ctor v.2 pipeline"
 echo -e "${blue}Date${nc} __________________ 2022.10.05"
-echo -e "${blue}Run${nc} ___________________ bash Start_shave1.sh"
-echo -e "${blue}Latest Modification${nc} ___ Removed UnifiedGenotyper (Please run Start_unifiedGenotyper.sh pipeline once Shave has finished"
+echo -e "${blue}Run${nc} ___________________ bash Start_unifiedgenotyper.sh"
+echo -e "${blue}Latest Modification${nc} ___ "
 
 
 ###### Hardware ######
@@ -53,8 +76,8 @@ echo -e "${blue}Operating system${nc} _______ ${red}${os}${nc}" # Print operatin
 ###### Hardware ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}###########${nc} ${red}HARDWARE CHARACTERISTICS${nc} ${green}###########${nc}"
-echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}HARDWARE${nc} ${green}#####${nc}"
+echo -e "${green}--------------------${nc}"
 echo ""
 
 if [[ ${os} == "OSX" ]]
@@ -86,8 +109,8 @@ echo -e "${blue}System Memory${nc} _________ ${red}${ram_size}${nc} Gb of RAM"  
 ###### Settings ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}###################${nc} ${red}SETTINGS${nc} ${green}###################${nc}"
-echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}SETTINGS${nc} ${green}#####${nc}"
+echo -e "${green}--------------------${nc}"
 echo ""
 
 workdir=$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)                                          # Get working directory
@@ -116,8 +139,8 @@ echo -e "${blue}Start Time${nc} ____________ ${time_stamp_start}"               
 ###### Installations ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}#########${nc} ${red}APPS INSTALLATIONS WITH CONDA${nc} ${green}########${nc}"
-echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}INSTALLATIONS${nc} ${green}#####${nc}"
+echo -e "${green}-------------------------${nc}"
 echo ""
 
 # Snakemake
@@ -128,7 +151,6 @@ then
     echo ""
 #   source ${HOME}/miniconda3/etc/profile.d/conda.sh
 else
-
     conda install -c conda-forge -c bioconda snakemake==${snake_ver} --yes
 fi
 
@@ -147,7 +169,6 @@ then
     echo ""
 #   source ${HOME}/miniconda3/etc/profile.d/conda.sh
 else
-
     conda install -c conda-forge -c bioconda gatk==${gatk_ver} --yes
 fi
 
@@ -163,8 +184,8 @@ fi
 ###### Rename samples ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}##############${nc} ${red}RENAME FASTQ FILES${nc} ${green}##############${nc}"
-echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}RENAME FASTQ FILES${nc} ${green}#####${nc}"
+echo -e "${green}------------------------------${nc}"
 echo ""
 
 # Rename fastq files to remove "_001" Illumina pattern.
@@ -172,13 +193,12 @@ echo ""
 #rename "s/_S\d+_/_/" ${workdir}/resources/reads/*.fastq.gz                 # Remove barcode-ID like {_S001_}
 rename "s/_L\d+_/_/" ${workdir}/resources/reads/*.fastq.gz                  # Remove line-ID ID like {_L001_}
 rename "s/_001.fastq.gz/.fastq.gz/" ${workdir}/resources/reads/*.fastq.gz   # Remove end-name ID like {_001}.fastq.gz
-#rename 's/(\w_).*_(R[1-2]).*(.fastq.gz)/$1$2$3/' *.fastq.gz                 # Keep only expr. in ( )
 
 ###### Call snakemake pipeline ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}###########${nc} ${red}SNAKEMAKE PIPELINE START${nc} ${green}###########${nc}"
-echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}SNAKEMAKE PIPELINE${nc} ${green}#####${nc}"
+echo -e "${green}------------------------------${nc}"
 echo ""
 
 echo -e "${blue}Unlocking working directory:${nc}"
@@ -189,9 +209,8 @@ echo ""
 # Re-run all jobs the output of which is recognized as incomplete.
 # Remove a lock on the working directory.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
     --config os=${os} \
     --rerun-incomplete \
     --unlock
@@ -206,9 +225,8 @@ echo ""
 # Re-run all jobs the output of which is recognized as incomplete.
 # List all conda environments and their location on disk.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -224,9 +242,8 @@ echo ""
 # Set or overwrite values in the workflow config object.
 # Cleanup unused conda environments.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -244,9 +261,8 @@ echo ""
 # If specified, only creates the job-specific conda environments then exits. The –use-conda flag must also be set.
 # If mamba package manager is not available, or if you still prefer to use conda, you can enforce that with this setting (default: 'mamba').
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -267,15 +283,13 @@ echo ""
 # Do not execute anything, and display what would be done. If very large workflow, use –dry-run –quiet to just print a summary of the DAG of jobs.
 # Do not output any progress or rule information.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
     --cores ${max_threads}\
     --config os=${os} \
     --rerun-incomplete \
     --use-conda \
     --conda-frontend conda \
-    --prioritize multiqc_reports_aggregation \
     --dry-run \
     --quiet
 
@@ -293,9 +307,8 @@ echo ""
 # Tell the scheduler to assign creation of given targets (and all their dependencies) highest priority.
 # Print out the shell commands that will be executed.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
     --cores ${max_threads} \
     --max-threads ${max_threads} \
     --config os=${os} \
@@ -303,28 +316,26 @@ snakemake \
     --keep-going \
     --use-conda \
     --conda-frontend conda \
-    --prioritize multiqc_reports_aggregation \
     --printshellcmds
 
 
 ###### Create usefull graphs, summary and logs ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}###########${nc} ${red}SNAKEMAKE PIPELINE LOGS${nc} ${green}############${nc}"
-echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}SNAKEMAKE PIPELINE LOGS${nc} ${green}#####${nc}"
+echo -e "${green}-------------------------------------${nc}"
 echo ""
 
 mkdir ${workdir}/results/10_Graphs/ 2> /dev/null
 
-graph_list="shave_dag shave_rulegraph shave_filegraph"
+graph_list="unifiedgenotyper_dag unifiedgenotyper_rulegraph unifiedgenotyper_filegraph"
 extention_list="pdf png"
 
 for graph in ${graph_list} ; do
     for extention in ${extention_list} ; do
 	snakemake \
-        --profile workflow/profiles/slurm \
 	    --directory ${workdir}/ \
-            --snakefile ${workdir}/workflow/rules/shave.smk \
+            --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
             --${graph} | \
 	    dot -T${extention} > \
 		${workdir}/results/10_Graphs/${graph}.${extention} ;
@@ -332,9 +343,8 @@ for graph in ${graph_list} ; do
 done
 
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir} \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/unifiedgenotyper.smk \
     --summary > ${workdir}/results/11_Reports/files_summary.txt
 
 cp ${workdir}/config/config.yaml ${workdir}/results/11_Reports/config.yaml
@@ -355,21 +365,14 @@ echo "Min. Coverage _________ ${min_cov}" >> ${workdir}/results/11_Reports/setti
 echo "Min. Allele Frequency _ ${min_af}" >> ${workdir}/results/11_Reports/settings.log                                                      # Log user config snvs cov min
 echo "Start Time ____________ ${time_stamp_start}" >> ${workdir}/results/11_Reports/settings.log                                            # Log analyzes starting time
 
-###### copy multiqc_report.html to results/ dir root ######
-echo ""
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo -e "${blue}#############${nc} ${red}COPY QC REPORT TO ROOT${nc} ${blue}############${nc}"
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo ""
-
 # and copy multiqc_report.html to results/ dir root
 cp ${workdir}/results/00_Quality_Control/multiqc/multiqc_report.html ${workdir}/results/All_readsQC_reports.html
 
 ###### Concatenate all coverage stats ######
 echo ""
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo -e "${blue}###########${nc} ${red}CONCATENATE COVERAGE STATS${nc} ${blue}##########${nc}"
-echo -e "${blue}------------------------------------------------------------------------${nc}"
+echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}CONCATENATE COVERAGE STATS${nc} ${green}#####${nc}"
+echo -e "${green}--------------------------------------${nc}"
 echo ""
 
 cat ${workdir}/results/03_Coverage/*coverage-stats.tsv > ${workdir}/results/All_genome_coverages.tsv
@@ -377,12 +380,11 @@ cat ${workdir}/results/03_Coverage/*coverage-stats.tsv > ${workdir}/results/All_
 awk "NR==1 || NR%2==0" ${workdir}/results/All_genome_coverages.tsv > ${workdir}/results/GENCOV.tmp \
     && mv ${workdir}/results/GENCOV.tmp ${workdir}/results/All_genome_coverages.tsv
 
-
 ###### End managment ######
 echo ""
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo -e "${blue}##################${nc} ${red}SCRIPT END${nc} ${blue}###################${nc}"
-echo -e "${blue}------------------------------------------------------------------------${nc}"
+echo -e "${green}------------------------------------------------------------------------${nc}"
+echo -e "${green}#####${nc} ${red}SCRIPT END${nc} ${green}#####${nc}"
+echo -e "${green}----------------------${nc}"
 echo ""
 
 find ${workdir}/results/ -type f -empty -delete                 # Remove empty file (like empty log)
@@ -393,9 +395,9 @@ elapsed_time=${SECONDS}                                         # Get SECONDS co
 minutes=$((${elapsed_time}/60))                                 # / 60 = minutes
 seconds=$((${elapsed_time}%60))                                    # % 60 = seconds
 
-echo -e "${red}End Time${nc} ______________ ${time_stamp_end}"                                                             # Print analyzes ending time
-echo -e "${red}Processing Time${nc} _______ ${ylo}${minutes}${nc} minutes and ${ylo}${seconds}${nc} seconds elapsed"       # Print total time elapsed
+echo -e "${blue}End Time${nc} ______________ ${time_stamp_end}"                                                             # Print analyzes ending time
+echo -e "${blue}Processing Time${nc} _______ ${ylo}${minutes}${nc} minutes and ${ylo}${seconds}${nc} seconds elapsed"       # Print total time elapsed
 
 echo ""
-echo -e "${blue}------------------------------------------------------------------------${nc}"
+echo -e "${green}------------------------------------------------------------------------${nc}"
 echo ""
