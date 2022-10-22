@@ -1,12 +1,33 @@
 #!/bin/bash
+###################configuration slurm##############################
+#SBATCH -A talignani
+#SBATCH --job-name=shave
+#SBATCH --time=6-23:00:00
+#SBATCH -p normal
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH --cpus-per-task 12
+#SBATCH --mem=64GB
+#SBATCH -o cluster_logs/slurm-%x-%j-%N.out
+#SBATCH -e cluster_logs/slurm-%x-%j-%N.err
+#SBATCH --mail-user=loic.talignani@ird.fr
+#SBATCH --mail-type=ALL
+###################################################################
 
-###### Rquired ######
+# USAGE: sbatch workflow/start_workflow_slurm.sh
+
+# set umask to avoid locking each other out of directories
+umask 002
+
+# get variables from workflow/variables.env
+source workflow/variables.env
+
+###### Required for local computing ######
 # For Mac with Apple Silicon processors, create a new empty osx-64 specific environment :
 # conda deactivate base
 # CONDA_SUBDIR=osx-64 conda create -n shave
 # conda activate shave
 # conda config --env --set subdir osx-64
-
 
 ##### Colors ######
 red="\033[1;31m"   # red
@@ -190,6 +211,7 @@ echo ""
 # Re-run all jobs the output of which is recognized as incomplete.
 # Remove a lock on the working directory.
 snakemake \
+    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --config os=${os} \
@@ -206,6 +228,7 @@ echo ""
 # Re-run all jobs the output of which is recognized as incomplete.
 # List all conda environments and their location on disk.
 snakemake \
+    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -223,6 +246,7 @@ echo ""
 # Set or overwrite values in the workflow config object.
 # Cleanup unused conda environments.
 snakemake \
+    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -242,6 +266,7 @@ echo ""
 # If specified, only creates the job-specific conda environments then exits. The –use-conda flag must also be set.
 # If mamba package manager is not available, or if you still prefer to use conda, you can enforce that with this setting (default: 'mamba').
 snakemake \
+    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -264,6 +289,7 @@ echo ""
 # Do not execute anything, and display what would be done. If very large workflow, use –dry-run –quiet to just print a summary of the DAG of jobs.
 # Do not output any progress or rule information.
 snakemake \
+    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads}\
@@ -289,6 +315,7 @@ echo ""
 # Tell the scheduler to assign creation of given targets (and all their dependencies) highest priority.
 # Print out the shell commands that will be executed.
 snakemake \
+    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -311,12 +338,13 @@ echo ""
 
 mkdir ${workdir}/results/10_Graphs/ 2> /dev/null
 
-graph_list="dag rulegraph filegraph"
+graph_list="shave_dag shave_rulegraph shave_filegraph"
 extention_list="pdf png"
 
 for graph in ${graph_list} ; do
     for extention in ${extention_list} ; do
 	snakemake \
+        --profile workflow/profiles/slurm \
 	    --directory ${workdir}/ \
             --snakefile ${workdir}/workflow/rules/shave.smk \
             --${graph} | \
@@ -326,6 +354,7 @@ for graph in ${graph_list} ; do
 done
 
 snakemake \
+    --profile workflow/profiles/slurm \
     --directory ${workdir} \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --summary > ${workdir}/results/11_Reports/files_summary.txt
