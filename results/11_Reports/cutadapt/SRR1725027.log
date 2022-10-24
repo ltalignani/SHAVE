@@ -1,0 +1,183 @@
+This is cutadapt 4.1 with Python 3.9.13
+Command line parameters: --cores 10 --trim-n --minimum-length 50 --adapter AGATCGGAAGAGC -A AGATCGGAAGAGC --adapter CTGTCTCTTATACACATC -A CTGTCTCTTATACACATC --adapter TGGAATTCTCGGGTGCCAAGG -A TGGAATTCTCGGGTGCCAAGG --output results/01_Trimming/cutadapt/SRR1725027_cutadapt-removed_R1.fastq.gz --paired-output results/01_Trimming/cutadapt/SRR1725027_cutadapt-removed_R2.fastq.gz resources/reads/SRR1725027_R1.fastq.gz resources/reads/SRR1725027_R2.fastq.gz
+Processing paired-end reads on 10 cores ...
+Process ReaderProcess-1:
+Process WorkerProcess-7:
+Process WorkerProcess-8:
+Process WorkerProcess-9:
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/__main__.py", line 1100, in main
+Process WorkerProcess-10:
+Process WorkerProcess-5:
+Process WorkerProcess-6:
+Process WorkerProcess-2:
+Process WorkerProcess-3:
+Process WorkerProcess-4:
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 765, in run
+    (n, bp1, bp2) = self._pipeline.process_reads()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 540, in process_reads
+    read1, read2 = modifier(read1, read2, info1, info2)
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/modifiers.py", line 104, in __call__
+    return self._modifier1(read1, info1), self._modifier2(read2, info2)
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 769, in run
+    self._send_outfiles(outfiles, chunk_index, n)
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/modifiers.py", line 794, in __call__
+    end_cut = self.end_trim.search(sequence)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+    stats = r.run()
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 803, in _send_outfiles
+    self._write_pipe.send_bytes(processed_chunk)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 205, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 769, in run
+    self._send_outfiles(outfiles, chunk_index, n)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 969, in run
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 803, in _send_outfiles
+    self._write_pipe.send_bytes(processed_chunk)
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 686, in run
+    self.send_to_worker(chunk_index, chunk1, chunk2)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 769, in run
+    self._send_outfiles(outfiles, chunk_index, n)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 205, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 803, in _send_outfiles
+    self._write_pipe.send_bytes(processed_chunk)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 410, in _send_bytes
+    self._send(buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 700, in send_to_worker
+    worker_index = self.queue.get()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/queues.py", line 103, in get
+    res = self._recv_bytes()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 373, in _send
+    n = write(self._handle, buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 769, in run
+    self._send_outfiles(outfiles, chunk_index, n)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 410, in _send_bytes
+    self._send(buf)
+Traceback (most recent call last):
+Process WorkerProcess-11:
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 769, in run
+    self._send_outfiles(outfiles, chunk_index, n)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 205, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 765, in run
+    (n, bp1, bp2) = self._pipeline.process_reads()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 543, in process_reads
+    if filter_(read1, read2, info1, info2):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/steps.py", line 305, in __call__
+    self.writer.write(read1, read2)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/dnaio/pairedend.py", line 189, in write
+    self._writer2.write(read2)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/dnaio/writers.py", line 148, in _write
+    def _write(self, record: SequenceRecord) -> None:
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 803, in _send_outfiles
+    self._write_pipe.send_bytes(processed_chunk)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 205, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 410, in _send_bytes
+    self._send(buf)
+KeyboardInterrupt
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 769, in run
+    self._send_outfiles(outfiles, chunk_index, n)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 803, in _send_outfiles
+    self._write_pipe.send_bytes(processed_chunk)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 221, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+    writer.write(data, chunk_index)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 205, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 419, in _recv_bytes
+    buf = self._recv(4)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 373, in _send
+    n = write(self._handle, buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 373, in _send
+    n = write(self._handle, buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 822, in write
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 410, in _send_bytes
+    self._send(buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 803, in _send_outfiles
+    self._write_pipe.send_bytes(processed_chunk)
+KeyboardInterrupt
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 384, in _recv
+    chunk = read(handle, remaining)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 769, in run
+    self._send_outfiles(outfiles, chunk_index, n)
+KeyboardInterrupt
+KeyboardInterrupt
+KeyboardInterrupt
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 205, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 373, in _send
+    n = write(self._handle, buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 803, in _send_outfiles
+    self._write_pipe.send_bytes(processed_chunk)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 205, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+    self._outfile.write(self._chunks[self._current_index])
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 410, in _send_bytes
+    self._send(buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 373, in _send
+    n = write(self._handle, buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/xopen/__init__.py", line 255, in write
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 410, in _send_bytes
+    self._send(buf)
+KeyboardInterrupt
+KeyboardInterrupt
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 373, in _send
+    n = write(self._handle, buf)
+KeyboardInterrupt
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 410, in _send_bytes
+    self._send(buf)
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/multiprocessing/connection.py", line 373, in _send
+    n = write(self._handle, buf)
+KeyboardInterrupt
+    self._file.write(arg)
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/bin/cutadapt", line 8, in <module>
+    sys.exit(main_cli())
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/__main__.py", line 1014, in main_cli
+    main(sys.argv[1:])
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/__main__.py", line 1100, in main
+    stats = r.run()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 851, in __exit__
+    self.close()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 997, in close
+    self._outfiles.close()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/cutadapt/pipeline.py", line 193, in close
+    f.close()
+  File "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/32a0b9b39ac02716029106dc77ae31c3/lib/python3.9/site-packages/xopen/__init__.py", line 265, in close
+    raise OSError(
+OSError: Output pigz process terminated with exit code 4

@@ -140,14 +140,7 @@ rule callable_loci:
     log :
         "results/11_reports/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.log"
     shell:
-        """
-        (gatk3 -T CallableLoci \
-        -R {input.refpath} \
-        -I {input.sort} \
-        -summary {output.summary} \
-        -o {output.call}) \
-        > {log} 2&1 
-        """
+        "gatk3 -T CallableLoci -R {input.refpath} -I {input.sort} -summary {output.summary} -o {output.call}" #  > {log} 2>&1
 
 ###############################################################################
 rule validate_sam:
@@ -159,13 +152,38 @@ rule validate_sam:
         "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
     input:
         sorted = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
+        index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai",
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
     output:
         check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt"
     log:
         "results/11_Reports/validatesamfiles/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
     shell:
-        "(picard ValidateSamFile -I {input.sorted} -R {input.refpath} --MODE SUMMARY --VERBOSITY) > {log} 2&1"
+        "(picard ValidateSamFile -I {input.sorted} -R {input.refpath} --MODE SUMMARY --VERBOSITY INFO) > {log} 2>&1"
+
+###############################################################################
+rule samtools_index_post_realign:
+    # Aim: indexing marked as duplicate BAM file
+    # Use: samtools index -@ [THREADS] -b [MARKDUP.bam] [INDEX.bai]
+    message:
+        "SamTools indexing realigned fixed-mate sorted BAM file {wildcards.sample} sample ({wildcards.aligner}) for Picard ValidateSamFile"
+    conda:
+        SAMTOOLS
+    resources:
+       cpus = CPUS
+    input:
+        sortedbam = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam"
+    output:
+        index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai"
+    log:
+        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted-index.log"
+    shell:
+        "samtools index "     # Samtools index, tools for alignments in the SAM format with command to index alignment
+        "-@ {resources.cpus} " # --threads: Number of additional threads to use (default: 1)
+        "-b "                  # -b: Generate BAI-format index for BAM files (default)
+        "{input.sortedbam} "     # Markdup bam input
+        "{output.index} "      # Markdup index output
+        "&> {log}"             # Log redirection
 
 ###############################################################################
 rule samtools_sort_post_realign:

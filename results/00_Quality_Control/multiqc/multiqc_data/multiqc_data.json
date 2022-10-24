@@ -2,14 +2,14 @@
     "report_data_sources": {
         "FastQ Screen": {
             "all_sections": {
-                "ERR3343471_R1_screen": "/Users/loictalignani/snakemake-models/shave2/results/00_Quality_Control/fastq-screen/ERR3343471_R1_screen.txt",
-                "ERR3343471_R2_screen": "/Users/loictalignani/snakemake-models/shave2/results/00_Quality_Control/fastq-screen/ERR3343471_R2_screen.txt"
+                "ERR3343471_R1_screen": "/Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastq-screen/ERR3343471_R1_screen.txt",
+                "ERR3343471_R2_screen": "/Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastq-screen/ERR3343471_R2_screen.txt"
             }
         },
         "FastQC": {
             "all_sections": {
-                "ERR3343471_R1": "/Users/loictalignani/snakemake-models/shave2/results/00_Quality_Control/fastqc/ERR3343471_R1_fastqc.zip",
-                "ERR3343471_R2": "/Users/loictalignani/snakemake-models/shave2/results/00_Quality_Control/fastqc/ERR3343471_R2_fastqc.zip"
+                "ERR3343471_R1": "/Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastqc/ERR3343471_R1_fastqc.zip",
+                "ERR3343471_R2": "/Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastqc/ERR3343471_R2_fastqc.zip"
             }
         }
     },
@@ -139,7 +139,7 @@
             }
         }
     ],
-    "report_multiqc_command": "/Users/loictalignani/snakemake-models/shave2/.snakemake/conda/6ce6d4ff60ab104fb5c41a6293cac866/bin/multiqc --quiet --outdir results/00_Quality_Control/multiqc results/00_Quality_Control/fastqc results/00_Quality_Control/fastq-screen --no-ansi",
+    "report_multiqc_command": "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/6cddfdc9d3d453a5552265d9bfca25d9/bin/multiqc --quiet --outdir results/00_Quality_Control/multiqc results/00_Quality_Control/fastqc results/00_Quality_Control/fastq-screen --no-ansi",
     "report_plot_data": {
         "fastqc_sequence_counts_plot": {
             "plot_type": "bar_graph",
@@ -3507,21 +3507,21 @@
         }
     },
     "config_analysis_dir_abs": [
-        "/Users/loictalignani/snakemake-models/shave2/results/00_Quality_Control/fastqc",
-        "/Users/loictalignani/snakemake-models/shave2/results/00_Quality_Control/fastq-screen"
+        "/Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastqc",
+        "/Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastq-screen"
     ],
     "config_analysis_dir": [
         "results/00_Quality_Control/fastqc",
         "results/00_Quality_Control/fastq-screen"
     ],
-    "config_creation_date": "2022-10-18, 11:04",
-    "config_git_hash": "b264f5cba900345bc1f4da91161d5ff2e17a808b",
+    "config_creation_date": "2022-10-24, 09:55",
+    "config_git_hash": "ef2af03e39f6f78527704b6af7c4f0ef2b76975c",
     "config_intro_text": null,
     "config_report_comment": null,
     "config_report_header_info": null,
-    "config_script_path": "/Users/loictalignani/snakemake-models/shave2/.snakemake/conda/6ce6d4ff60ab104fb5c41a6293cac866/lib/python3.10/site-packages/multiqc/utils",
+    "config_script_path": "/Users/loictalignani/snakemake-models/shave/.snakemake/conda/6cddfdc9d3d453a5552265d9bfca25d9/lib/python3.10/site-packages/multiqc/utils",
     "config_short_version": "1.12",
     "config_subtitle": null,
     "config_title": null,
-    "config_version": "1.12 (b264f5c)"
+    "config_version": "1.12 (ef2af03)"
 }

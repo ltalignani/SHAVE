@@ -189,7 +189,6 @@ echo ""
 # Re-run all jobs the output of which is recognized as incomplete.
 # Remove a lock on the working directory.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --config os=${os} \
@@ -206,7 +205,6 @@ echo ""
 # Re-run all jobs the output of which is recognized as incomplete.
 # List all conda environments and their location on disk.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -224,7 +222,6 @@ echo ""
 # Set or overwrite values in the workflow config object.
 # Cleanup unused conda environments.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -244,7 +241,6 @@ echo ""
 # If specified, only creates the job-specific conda environments then exits. The –use-conda flag must also be set.
 # If mamba package manager is not available, or if you still prefer to use conda, you can enforce that with this setting (default: 'mamba').
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -267,7 +263,6 @@ echo ""
 # Do not execute anything, and display what would be done. If very large workflow, use –dry-run –quiet to just print a summary of the DAG of jobs.
 # Do not output any progress or rule information.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads}\
@@ -293,7 +288,6 @@ echo ""
 # Tell the scheduler to assign creation of given targets (and all their dependencies) highest priority.
 # Print out the shell commands that will be executed.
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir}/ \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
@@ -316,13 +310,12 @@ echo ""
 
 mkdir ${workdir}/results/10_Graphs/ 2> /dev/null
 
-graph_list="shave_dag shave_rulegraph shave_filegraph"
+graph_list="dag rulegraph filegraph"
 extention_list="pdf png"
 
 for graph in ${graph_list} ; do
     for extention in ${extention_list} ; do
 	snakemake \
-        --profile workflow/profiles/slurm \
 	    --directory ${workdir}/ \
             --snakefile ${workdir}/workflow/rules/shave.smk \
             --${graph} | \
@@ -332,7 +325,6 @@ for graph in ${graph_list} ; do
 done
 
 snakemake \
-    --profile workflow/profiles/slurm \
     --directory ${workdir} \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --summary > ${workdir}/results/11_Reports/files_summary.txt

@@ -530,3 +530,143 @@ Aligner _______________
 Min. Coverage _________ 10
 Min. Allele Frequency _ 0.1
 Start Time ____________ 2022-10-18 13:18
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 2 samples (4 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 09:35
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 2 samples (4 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 09:42
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 09:48
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 09:55
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 09:57
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 10:30
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 14:38
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 14:48
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 14:49
+                        Brand(R) | Type(R) | Model | @ Speed GHz
+Chip Model Name _______ Apple M1 Pro
+Physical CPUs _________  10 cores
+Logical CPUs __________ 10 threads
+System Memory _________ 32 Gb of RAM
+Working Directory _____ /Users/loictalignani/snakemake-models/shave/
+Samples Processed _____ 1 samples (2 fastq files)
+Maximum Threads _______ 10 of 10 threads available
+Maximum Memory ________ 16 of 32 Gb available
+Genome Reference ______ 
+Aligner _______________ 
+Min. Coverage _________ 10
+Min. Allele Frequency _ 0.1
+Start Time ____________ 2022-10-24 15:01
