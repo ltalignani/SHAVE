@@ -1,3 +1,12 @@
+default-resources:
+  - account='$ACCOUNT'
+  - partition='$PARTITION'
+  - tmpdir=system_tmpdir
+  - threads=24
+  - mem_mb=8000*threads
+  - out='cluster_logs/slurm-%x-%j-%N.out'
+  - err='cluster_logs/slurm-%x-%j-%N.err'
+  - extra=''
 reason: true
 rerun-incomplete: true
 keep-going: true
@@ -16,12 +25,3 @@ cluster: sbatch --account={resources.account}
   --cpus-per-task={threads}
   --mem={resources.mem_mb}M
   --output={resources.out} {resources.extra}
-default-resources:
-  - account='$ACCOUNT'
-  - partition='$PARTITION'
-  - tmpdir=system_tmpdir
-  - threads=24
-  - mem_mb=8000*threads
-  - out='cluster_logs/slurm-%x-%j-%N.out'
-  - err='cluster_logs/slurm-%x-%j-%N.err'
-  - extra=''

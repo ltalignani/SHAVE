@@ -94,18 +94,78 @@ rule all:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        check = expand("results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt",
+                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
+        callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
+                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         igv_output = expand("results/03_Coverage/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         realigned_fixed_bam = expand("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
-                           sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
+                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         indelqual = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         covstats = expand("results/03_Coverage/{sample}_{aligner}_{mincov}X_coverage-stats.tsv",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        #check = expand("results/05_Validation/validatesamfile/{sample}_{aligner}_check_mark_dup_bam.txt",
-        #                   sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         stats = expand("results/05_Validation/{sample}_{aligner}_mark-dup.txt",
-                           sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV)
+                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV)
+
+###############################################################################
+rule callable_loci:
+    # Aim: Collects statistics on callable, uncallable, poorly mapped, and other parts of the genome.
+    # A very common question about a NGS set of reads is what areas of the genome are considered callable. This tool
+    # considers the coverage at each locus and emits either a per base state or a summary interval BED file that
+    # partitions the genomic intervals into the following callable states:
+    # REF_N: The reference base was an N, which is not considered callable the GATK
+    # PASS: The base satisfied the min. depth for calling but had less than maxDepth to avoid having EXCESSIVE_COVERAGE
+    # NO_COVERAGE: Absolutely no reads were seen at this locus, regardless of the filtering parameters
+    # LOW_COVERAGE: There were fewer than min. depth bases at the locus, after applying filters
+    # EXCESSIVE_COVERAGE: More than -maxDepth read at the locus, indicating some sort of mapping problem
+    # POOR_MAPPING_QUALITY: More than --maxFractionOfReadsWithLowMAPQ at the locus, indicating a poor mapping quality of the reads
+    # Use: gatk3 -T CallableLoci \
+    #     -T CallableLoci \
+    #     -R reference.fasta \
+    #     -I myreads.bam \
+    #     -summary table.txt \
+    #     -o callable_status.bed
+    message:
+        "GATK3 CallableLoci for {wildcards.sample} sample ({wildcards.aligner}"
+    conda:
+        GATK
+    input:
+        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        sort = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam"
+    output:
+        call = "results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
+        summary = "results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_summary_table.txt"
+    log :
+        "results/11_reports/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.log"
+    shell:
+        """
+        (gatk3 -T CallableLoci \
+        -R {input.refpath} \
+        -I {input.sort} \
+        -summary {output.summary} \
+        -o {output.call}) \
+        > {log} 2&1 
+        """
+
+###############################################################################
+rule validate_sam:
+    # Aim: Basic check for bam file validity, as interpreted by the Broad Institute.
+    # Use: picard.jar ValidateSamFile \
+    #      -I input.bam \
+    #      - MODE SUMMARY
+    message:
+        "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
+    input:
+        sorted = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
+        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+    output:
+        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt"
+    log:
+        "results/11_Reports/validatesamfiles/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
+    shell:
+        "(picard ValidateSamFile -I {input.sorted} -R {input.refpath} --MODE SUMMARY --VERBOSITY) > {log} 2&1"
 
 ###############################################################################
 rule samtools_sort_post_realign:
@@ -482,28 +542,6 @@ rule samtools_stats:
         "{input.bam} "                                                      # mark-dup bam input
         "1> {output.stats} "                                                # stats output
         "2> {log}"                                                          # Log redirection
-
-###############################################################################
-#rule validate_sam:
-    # Aim: Basic check for bam file validity, as interpreted by the Broad Institute
-    # Use: picard.jar ValidateSamFile \
-    #      -I input.bam \
-    #      - MODE SUMMARY
-#    message:
-#        "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
-#    input:
-#        markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam",
-#        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-#    output:
-#        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_check_mark_dup_bam.txt"
-#    log:
-#        "results/11_Reports/validatesamfiles/{sample}_{aligner}_mark-dup.log"
-#    shell:
-#        "picard ValidateSamFile "   # Validates a SAM/BAM/CRAM file.<p>This tool reports on the validity of a SAM/BAM/CRAM file relative to the SAM format specification
-#        "-I {input.markdup} "       # Input SAM/BAM/CRAM required
-#        "-R {input.refpath} "
-#        "--MODE SUMMARY "            # This mode outputs a summary table listing the numbers of all 'errors' and 'warnings'
-#        "--VERBOSITY "
 
 ###############################################################################
 rule samtools_index_markdup:

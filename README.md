@@ -1,4 +1,4 @@
-# SHAVE: SHort-read Alignment pipeline for VEctor v.1 - with UnifiedGenotyper #
+# SHAVE: SHort-read Alignment pipeline for VEctor v.1 - with UnifiedGenotyper variant calling #
 
 ![Developper](<https://badgen.net/badge/Developper/Loïc Talignani/red?scale=0.9>)
 ![Maintener](<https://badgen.net/badge/Maintener/Loïc Talignani/blue?scale=0.9>)
@@ -52,12 +52,17 @@ Written for **MOVE-ADAPT** project.
 - Mask low coverage regions (adjustable threshold),
 - index Indels,
 - realign Indels,
+- Sort by queryname,
+- Fix mates,
+- Sort by coordinates,
 
 **UnifiedGenotyper pipeline:** 
 
+- Index realigned bam,
 - Variants calling (_vcf files_),
 - Genotyping, 
 - Variant filtering,
+- VCF compression,
 - Genome coverage statistics,
 - View intervals in IGV,  
 - Consensus sequences (_fasta file_)
