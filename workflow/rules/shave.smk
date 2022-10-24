@@ -159,7 +159,9 @@ rule validate_sam:
     log:
         "results/11_Reports/validatesamfiles/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
     shell:
-        "(picard ValidateSamFile -I {input.sorted} -R {input.refpath} --MODE SUMMARY --VERBOSITY INFO) > {log} 2>&1"
+        """
+        picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} --VERBOSITY ERROR > {log} 2>&1
+        """
 
 ###############################################################################
 rule samtools_index_post_realign:
@@ -289,7 +291,9 @@ rule indelrealigner:
         reference = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
         target_intervals = "results/04_Variants/realignertargetcreator/{sample}_{aligner}_{mincov}X.intervals"
     output:
-        realigned_bam = temp("results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign.bam"),    
+        realigned_bam = temp("results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign.bam"), 
+    benchmark:
+        "benchmarks/indelrealigner/{sample}_{aligner}_{mincov}X_indel-qual.tsv"   
     log:
         "results/11_Reports/indelrealigner/{sample}_{aligner}_{mincov}X.log"
     threads: 

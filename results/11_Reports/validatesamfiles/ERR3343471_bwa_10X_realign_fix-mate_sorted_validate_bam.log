@@ -1,15 +1,6 @@
-15:01:31.178 INFO  NativeLibraryLoader - Loading libgkl_compression.dylib from jar:file:/Users/loictalignani/miniconda3/envs/snakemake/share/picard-2.27.4-0/picard.jar!/com/intel/gkl/native/libgkl_compression.dylib
-[Mon Oct 24 15:01:31 CEST 2022] ValidateSamFile --INPUT results/05_Validation/ERR3343471_bwa_10X_realign_fix-mate_sorted.bam --MODE SUMMARY --VERBOSITY INFO --REFERENCE_SEQUENCE resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta --MAX_OUTPUT 100 --IGNORE_WARNINGS false --VALIDATE_INDEX true --INDEX_VALIDATION_STRINGENCY EXHAUSTIVE --IS_BISULFITE_SEQUENCED false --MAX_OPEN_TEMP_FILES 8000 --SKIP_MATE_VALIDATION false --QUIET false --VALIDATION_STRINGENCY STRICT --COMPRESSION_LEVEL 5 --MAX_RECORDS_IN_RAM 500000 --CREATE_INDEX false --CREATE_MD5_FILE false --GA4GH_CLIENT_SECRETS client_secrets.json --help false --version false --showHidden false --USE_JDK_DEFLATER false --USE_JDK_INFLATER false
-[Mon Oct 24 15:01:31 CEST 2022] Executing as loictalignani@MBP-Loic.local on Mac OS X 10.16 x86_64; OpenJDK 64-Bit Server VM 1.8.0_332-b09; Deflater: Intel; Inflater: Intel; Provider GCS is not available; Picard version: Version:2.27.4-SNAPSHOT
-
-
-## HISTOGRAM	java.lang.String
-Error Type	Count
-ERROR:INVALID_FLAG_FIRST_OF_PAIR	579
-ERROR:INVALID_FLAG_SECOND_OF_PAIR	677
-ERROR:MATE_CIGAR_STRING_INVALID_PRESENCE	314
-ERROR:MISSING_PLATFORM_VALUE	1
-
-[Mon Oct 24 15:01:34 CEST 2022] picard.sam.ValidateSamFile done. Elapsed time: 0,06 minutes.
-Runtime.totalMemory()=1022361600
+20:39:02.015 INFO  NativeLibraryLoader - Loading libgkl_compression.dylib from jar:file:/Users/loictalignani/miniconda3/envs/snakemake/share/picard-2.27.4-0/picard.jar!/com/intel/gkl/native/libgkl_compression.dylib
+[Mon Oct 24 20:39:02 CEST 2022] ValidateSamFile --INPUT results/05_Validation/ERR3343471_bwa_10X_realign_fix-mate_sorted.bam --OUTPUT results/05_Validation/validatesamfile/ERR3343471_bwa_10X_realign_fix-mate_sorted_validate_bam.txt --VERBOSITY ERROR --REFERENCE_SEQUENCE resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta --MODE VERBOSE --MAX_OUTPUT 100 --IGNORE_WARNINGS false --VALIDATE_INDEX true --INDEX_VALIDATION_STRINGENCY EXHAUSTIVE --IS_BISULFITE_SEQUENCED false --MAX_OPEN_TEMP_FILES 8000 --SKIP_MATE_VALIDATION false --QUIET false --VALIDATION_STRINGENCY STRICT --COMPRESSION_LEVEL 5 --MAX_RECORDS_IN_RAM 500000 --CREATE_INDEX false --CREATE_MD5_FILE false --GA4GH_CLIENT_SECRETS client_secrets.json --help false --version false --showHidden false --USE_JDK_DEFLATER false --USE_JDK_INFLATER false
+[Mon Oct 24 20:39:02 CEST 2022] Executing as loictalignani@MBP-Loic.local on Mac OS X 10.16 x86_64; OpenJDK 64-Bit Server VM 1.8.0_332-b09; Deflater: Intel; Inflater: Intel; Provider GCS is not available; Picard version: Version:2.27.4-SNAPSHOT
+[Mon Oct 24 20:39:03 CEST 2022] picard.sam.ValidateSamFile done. Elapsed time: 0,03 minutes.
+Runtime.totalMemory()=919076864
 To get help, see http://broadinstitute.github.io/picard/index.html#GettingHelp

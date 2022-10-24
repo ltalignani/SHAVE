@@ -75,7 +75,7 @@ SENSITIVITY = config["bowtie2"]["sensitivity"]      # Bowtie2 sensitivity preset
 
 REFPATH = config["consensus"]["path"]               # Path to genomes references
 REFERENCE = config["consensus"]["reference"]        # Genome reference sequence, in fasta format
-ALLELES = config["alleles"]["known_sites"]          # Known allele sites, in VCF format 
+#ALLELES = config["alleles"]["known_sites"]          # Known allele sites, in VCF format 
 MINCOV = config["consensus"]["mincov"]              # Minimum coverage, mask lower regions with 'N'
 MINAF = config["consensus"]["minaf"]                # Minimum allele frequency allowed
 IUPAC = config["consensus"]["iupac"]                # Output variants in the form of IUPAC ambiguity codes
@@ -87,9 +87,9 @@ IUPAC = config["consensus"]["iupac"]                # Output variants in the for
 rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
-        index_archive = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.bgz.tbi",
+        index_archive = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.gz.tbi",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        archive = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.bgz",   
+        archive = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.gz",   
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         consensus = expand("results/06_Consensus/{sample}_{aligner}_{mincov}X_consensus.fasta",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
@@ -203,7 +203,7 @@ rule hard_filter_calls:
         ref=REFPATH,
         vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{mincov}X_indels.vcf",
     output:
-        vcf="results/04_Variants/variantfiltration/{sample}_{aligner}_{mincov}X_hardfiltered.vcf.gz",
+        vcf="results/04_Variants/variantfiltration/{sample}_{aligner}_{mincov}X_hardfiltered.vcf",
     params:
         filters={"myfilter": "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"},
         extra="",
@@ -229,7 +229,7 @@ rule unifiedgenotyper:
     conda:
         GATK
     input:
-        bam = "results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
+        bam = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
         ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
         index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai"
         #alleles = ALLELES
