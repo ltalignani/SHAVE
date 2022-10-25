@@ -1,27 +1,59 @@
+snakefile: shave.smk
+reason: True
+rerun-incomplete: True
+show-failed-logs: True
+keep-going: True
+printshellcmds: True
+use-conda: true
+conda-frontend: conda
+latency-wait: 60
+restart-times: 3
+use-singularity: False
+
+# Cluster submission
+jobname: "{rule}.{jobid}"               # Provide a custom name for the jobscript that is submitted to the cluster.
+max-jobs-per-second: 1                  # Maximal number of cluster/drmaa jobs per second, default is 10, fractions allowed.
+max-status-checks-per-second: 10        # Maximal number of job status checks per second, default is 10
+jobs: 100                               # Use at most N CPU cluster/cloud jobs in parallel.
+cluster: "sbatch --account={resources.account} --partition={resources.partition} --cpus-per-task={threads} --output={resources.out} --time={resources.runtime} --mem={resources.mem_mb}" 
+
+# Job resources
+set-resources:
+  - bowtie2_mapping:mem_mb=64000
+  - bowtie2_mapping:runtime=04:00:00
+  - bwa_mapping:mem_mb=64000
+  - bwa_mapping:runtime=04:00:00
+  - lofreq_indel_qualities:mem_mb=64000
+  - lofreq_indel_qualities:runtime=04:00:00
+  - realignertargetcreator:mem_mb=64000
+  - realignertargetcreator:runtime=04:00:00
+  - indelrealigner:mem_mb=64000
+  - indelrealigner:runtime=04:00:00
+
+# For some reasons time needs quotes to be read by snakemake
 default-resources:
   - account='$ACCOUNT'
   - partition='$PARTITION'
   - tmpdir=system_tmpdir
-  - threads=24
-  - mem_mb=8000*threads
+  - threads=12
+  - mem_mb=1000*threads
+  - runtime="02:00:00"
   - out='cluster_logs/slurm-%x-%j-%N.out'
   - err='cluster_logs/slurm-%x-%j-%N.err'
-  - extra=''
-reason: true
-rerun-incomplete: true
-keep-going: true
-printshellcmds: true
-local-cores: 24
-max-threads: 256
-jobs: 500
-max-jobs-per-second: 1
-use-conda: true
-conda-frontend: conda
-latency-wait: 120
-use-singularity: false
-singularity-args: "--nv "
-cluster: sbatch --account={resources.account}
-  --partition={resources.partition}
-  --cpus-per-task={threads}
-  --mem={resources.mem_mb}M
-  --output={resources.out} {resources.extra}
+
+# Define the number of threads used by rules
+set-threads:
+  - bowtie2_mapping=24
+  - bwa_mapping=24
+  - lofreq_indel_qualities=24
+  - realignertargetcreator=24
+  - indelrealigner=24
+  
+
+
+
+               
+
+
+#cluster: "sbatch --output=\"jobs/{rule}/slurm_%x_%j.out\" --error=\"jobs/{rule}/slurm_%x_%j.log\"
+
