@@ -84,6 +84,18 @@ IUPAC = config["consensus"]["iupac"]                # Output variants in the for
 # FUNCTIONS #
 
 ###############################################################################
+onstart:
+    print("##### Creating profile pipeline #####\n") 
+    print("\t Creating jobs output subfolders...\n")
+    shell("mkdir -p Cluster_logs/sed_rename_headers")
+    shell("mkdir -p Cluster_logs/bcftools_consensus")
+    shell("mkdir -p Cluster_logs/tabix_tabarch_indexing")
+    shell("mkdir -p Cluster_logs/bcftools_variant_filt_archive")
+    shell("mkdir -p Cluster_logs/hard_filter_calls")
+    shell("mkdir -p Cluster_logs/unifiedgenotyper")
+    shell("mkdir -p Cluster_logs/samtools_index")
+
+###############################################################################
 rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
