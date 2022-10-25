@@ -417,6 +417,8 @@ rule realignertargetcreator:
         "benchmarks/realignertargetcreator/{sample}_{aligner}_{mincov}X.tsv"
     log:
         "results/11_Reports/realignertargetcreator/{sample}_{aligner}_{mincov}X.log"
+    resources:
+        mem_gb = MEM_GB
     params:
         java_opts="-Xmx{resources.mem_gb}G"
     shell:
