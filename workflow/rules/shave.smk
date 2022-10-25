@@ -359,8 +359,10 @@ rule indelrealigner:
         CPUS
     resources:
         mem_gb = MEM_GB
+    params:
+        java_opts="-Xmx{resources.mem_gb}G"
     shell:
-        "gatk3 -T IndelRealigner "          
+        "gatk3 {java_opts} -T IndelRealigner "          
         "-R {input.reference} "
         "-targetIntervals {input.target_intervals} "        
         "-I {input.bam} "
@@ -415,8 +417,10 @@ rule realignertargetcreator:
         "benchmarks/realignertargetcreator/{sample}_{aligner}_{mincov}X.tsv"
     log:
         "results/11_Reports/realignertargetcreator/{sample}_{aligner}_{mincov}X.log"
+    params:
+        java_opts="-Xmx{resources.mem_gb}G"
     shell:
-        "gatk3 -T RealignerTargetCreator "
+        "gatk3 {java_opts} -T RealignerTargetCreator "
         "-R {input.reference} "
         "-I {input.bam} "
         "-o {output.intervals} "

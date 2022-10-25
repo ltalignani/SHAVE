@@ -15,7 +15,13 @@ jobname: "{rule}.{jobid}" # Provide a custom name for the jobscript that is subm
 max-jobs-per-second: 1 # Maximal number of cluster/drmaa jobs per second, default is 10, fractions allowed.
 max-status-checks-per-second: 10 # Maximal number of job status checks per second, default is 10
 jobs: 100 # Use at most N CPU cluster/cloud jobs in parallel.
-cluster: "sbatch --account={resources.account} --partition={resources.partition} --cpus-per-task={threads} --output=\"cluster_logs/{rule}/slurm_%x_%j.out\" --error=\"cluster_logs/{rule}/slurm_%x_%j.log\ --time={resources.runtime} --mem={resources.mem_mb}"
+cluster: "sbatch --account={resources.account} 
+                 --partition={resources.partition} 
+                 --cpus-per-task={threads} 
+                 --output=\"cluster_logs/{rule}/slurm_%x_%j.out\" 
+                 --error=\"cluster_logs/{rule}/slurm_%x_%j.log\ 
+                 --time={resources.runtime} 
+                 --mem={resources.mem_mb}"
 
 # Job resources
 set-resources:
@@ -48,3 +54,5 @@ set-threads:
   - lofreq_indel_qualities=24
   - realignertargetcreator=24
   - indelrealigner=24
+#you can add nodelist option if you want force slurm into a particular node
+#nodelist: nodeX

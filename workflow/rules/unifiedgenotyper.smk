@@ -237,8 +237,10 @@ rule unifiedgenotyper:
         vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{mincov}X_indels.vcf"
     log:
         "results/11_Reports/unifiedgenotyper/{sample}_{aligner}_{mincov}X.log"
+    params:
+        java_opts="-Xmx{resources.mem_gb}G"
     shell:
-        "gatk3 -T UnifiedGenotyper "                    # Genome Analysis Tool Kit - Broad Institute UnifiedGenotyper
+        "gatk3 {java_opts} -T UnifiedGenotyper "        # Genome Analysis Tool Kit - Broad Institute UnifiedGenotyper
         "-I {input.bam} "                               # Input indel realigned BAM file
         "-R {input.ref} "                               # Reference sequence in fasta format
         "--out {output.vcf} "                           # Output VCF
