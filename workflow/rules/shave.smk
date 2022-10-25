@@ -172,6 +172,8 @@ rule callable_loci:
     output:
         call = "results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
         summary = "results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_summary_table.txt"
+    threads: 
+        CPUS
     log :
         "results/11_reports/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.log"
     shell:
@@ -193,6 +195,8 @@ rule validate_sam:
         check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt"
     log:
         "results/11_Reports/validatesamfiles/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
+    threads: 
+        CPUS
     shell:
         """
         picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} --VERBOSITY ERROR > {log} 2>&1
@@ -214,6 +218,8 @@ rule samtools_stats:
         stats = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.txt"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.log"
+    threads: 
+        CPUS
     shell:
         "samtools stats "                                                   # Samtools stats, collects statistics from BAM files. The output can be visualized using plot-bamstats.
         "--threads {resources.cpus} "                                       # -@: Number of additional threads to use (default: 1)
@@ -238,6 +244,8 @@ rule samtools_index_post_realign:
         index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted-index.log"
+    threads: 
+        CPUS
     shell:
         "samtools index "     # Samtools index, tools for alignments in the SAM format with command to index alignment
         "-@ {resources.cpus} " # --threads: Number of additional threads to use (default: 1)
@@ -265,6 +273,8 @@ rule samtools_sort_post_realign:
         sorted = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.log"
+    threads: 
+        CPUS
     shell:
         "samtools sort "              # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
         "--threads {resources.cpus} "  # -@: Number of additional threads to use (default: 1)
@@ -291,6 +301,8 @@ rule samtools_fixmate_post_realign:
         fixmate = temp("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_fixmate.log"
+    threads: 
+        CPUS
     shell:
         "samtools fixmate "             # Samtools fixmate, tools for alignments in the SAM format with command to fix mate information
         "--threads {resources.cpus} "   # -@: Number of additional threads to use (default: 1)
@@ -317,6 +329,8 @@ rule samtools_sortbynames_post_realign:
         realignedbynames = temp("results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign_sort-by-names.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_sort-by-names.log"
+    threads: 
+        CPUS
     shell:
         "samtools sort "                        # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
         "--threads {resources.cpus} "           # -@: Number of additional threads to use (default: 1)
@@ -386,6 +400,8 @@ rule awk_intervals_for_IGV:
         bed = "results/04_Variants/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed"
     log:
         "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_min-cov-filt.log"
+    threads: 
+        CPUS
     shell:
         "awk -F '[:-]' "                # Awk, a program that you can use to select particular records in a file and perform operations upon them
         "{params.cmd} "                 # {AWK_CMD_INTERVALS:q} :q : is asking snakemake to quote the awk command for me. 
@@ -419,6 +435,8 @@ rule realignertargetcreator:
         "results/11_Reports/realignertargetcreator/{sample}_{aligner}_{mincov}X.log"
     resources:
         mem_gb = MEM_GB
+    threads: 
+        CPUS
     params:
         java_opts="-Xmx{resources.mem_gb}G"
     shell:
@@ -444,6 +462,8 @@ rule samtools_indel_indexing:
         index = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bai"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_indel-qual-index.log"
+    threads: 
+        CPUS
     shell:
         "samtools index "      # Samtools index, tools for alignments in the SAM format with command to index alignment
         "-@ {resources.cpus} " # Number of additional threads to use (default: 0)
@@ -469,6 +489,8 @@ rule lofreq_indel_qualities:
         indelqual = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam"
     log:
         "results/11_Reports/lofreq/{sample}_{aligner}_{mincov}X_indel-qual.log"
+    threads: 
+        CPUS
     shell:
         "lofreq "                   # LoFreq, fast and sensitive inference of SNVs and Indels
         "indelqual "                # Insert indel qualities into BAM file (required for indel predictions)
@@ -494,6 +516,8 @@ rule bedtools_masking:
         maskedref = "results/04_Variants/{sample}_{aligner}_{mincov}X_masked-ref.fasta"
     log:
         "results/11_Reports/bedtools/{sample}_{aligner}_{mincov}X_masking.log"
+    threads: 
+        CPUS
     shell:
         "bedtools maskfasta "                        # Bedtools maskfasta, mask a fasta file based on feature coordinates
         "-fi {params.path} "       # Input FASTA file
@@ -515,6 +539,8 @@ rule bedtools_merged_mask:
         lowcovmask = temp("results/03_Coverage/{sample}_{aligner}_{mincov}X_low-cov-mask.bed")
     log:
         "results/11_Reports/bedtools/{sample}_{aligner}_{mincov}X_merging.log"
+    threads: 
+        CPUS
     shell:
         "bedtools merge "        # Bedtools merge, merges overlapping BED/GFF/VCF entries into a single interval
         "-i {input.mincovfilt} "  # -i: BED/GFF/VCF input to merge
@@ -537,6 +563,8 @@ rule awk_mincovfilt:
         mincovfilt = temp("results/03_Coverage/{sample}_{aligner}_{mincov}X_min-cov-filt.bed")
     log:
         "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_min-cov-filt.log"
+    threads: 
+        CPUS
     shell:
         "awk "                      # Awk, a program that you can use to select particular records in a file and perform operations upon them
         "'$4 < {params.mincov}' "    # Minimum coverage for masking regions in consensus sequence
@@ -560,6 +588,8 @@ rule awk_coverage_stats:
         covstats = "results/03_Coverage/{sample}_{aligner}_{mincov}X_coverage-stats.tsv"
     log:
         "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_coverage-stats.log"
+    threads: 
+        CPUS
     shell:
         "awk ' "                                  # Awk, a program that you can use to select particular records in a file and perform operations upon them
         "$4 >= {params.mincov} "                   # Minimum coverage
@@ -598,6 +628,8 @@ rule bedtools_genome_coverage:
         genomecov = temp("results/03_Coverage/{sample}_{aligner}_genome-cov.bed")
     log:
         "results/11_Reports/bedtools/{sample}_{aligner}_genome-cov.log"
+    threads: 
+        CPUS
     shell:
         "bedtools genomecov "    # Bedtools genomecov, compute the coverage of a feature file among a genome
         "-bga "                   # Report depth in BedGraph format, regions with zero coverage are also reported
@@ -621,6 +653,8 @@ rule samtools_index_markdup:
         index = "results/02_Mapping/{sample}_{aligner}_mark-dup.bai"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_mark-dup-index.log"
+    threads: 
+        CPUS
     shell:
         "samtools index "     # Samtools index, tools for alignments in the SAM format with command to index alignment
         "-@ {resources.cpus} " # --threads: Number of additional threads to use (default: 1)
@@ -645,6 +679,8 @@ rule samtools_markdup:
         markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_mark-dup.log"
+    threads: 
+        CPUS
     shell:
         "samtools markdup "          # Samtools markdup, tools for alignments in the SAM format with command mark duplicates
         "--threads {resources.cpus} " # -@: Number of additional threads to use (default: 1)
@@ -674,6 +710,8 @@ rule samtools_calmd:
         calmd = temp("results/02_Mapping/{sample}_{aligner}_sorted_MD.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_sorted.log"
+    threads: 
+        CPUS
     shell:
        "samtools calmd "                                               # Samtools calmd, tools to generate the MD tag for SNP/indel calling w/o lookin at the reference
         "--threads {resources.cpus} "                                   # -@: Number of additional threads to use (default: 1)
@@ -702,6 +740,8 @@ rule samtools_sorting:
         sorted = temp("results/02_Mapping/{sample}_{aligner}_sorted.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_sorted.log"
+    threads: 
+        CPUS
     shell:
         "samtools sort "              # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
         "--threads {resources.cpus} "  # -@: Number of additional threads to use (default: 1)
@@ -728,6 +768,8 @@ rule samtools_fixmate:
         fixmate = temp("results/02_Mapping/{sample}_{aligner}_fix-mate.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_fixmate.log"
+    threads: 
+        CPUS
     shell:
         "samtools fixmate "           # Samtools fixmate, tools for alignments in the SAM format with command to fix mate information
         "--threads {resources.cpus} "  # -@: Number of additional threads to use (default: 1)
@@ -754,6 +796,8 @@ rule samtools_sortbynames:
         sortbynames = temp("results/02_Mapping/{sample}_{aligner}_sort-by-names.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_sort-by-names.log"
+    threads: 
+        CPUS
     shell:
         "samtools sort "              # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
         "--threads {resources.cpus} "  # -@: Number of additional threads to use (default: 1)
@@ -787,6 +831,8 @@ rule bwa_mapping:
         "benchmarks/bwa/{sample}.tsv"
     log:
         "results/11_Reports/bwa/{sample}.log"
+    threads: 
+        CPUS
     shell:
         "bwa mem "                                                  # BWA-MEM algorithm, performs local alignment.
         "-M "                                                       # Mark shorter split hits as secondary (for Picard compatibility). 
@@ -823,6 +869,8 @@ rule bowtie2_mapping:
         "benchmarks/bowtie2/{sample}.tsv"
     log:
         "results/11_Reports/bowtie2/{sample}.log"
+    threads: 
+        CPUS
     shell:
         "bowtie2 "                    # Bowtie2, an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.
         "--threads {resources.cpus} "  # -p: Number of alignment threads to launch (default: 1)
@@ -858,6 +906,8 @@ rule sickle_trim_quality:
         single = temp("results/01_Trimming/sickle/{sample}_sickle-trimmed_SE.fastq.gz")
     log:
         "results/11_Reports/sickle-trim/{sample}.log"
+    threads: 
+        CPUS
     shell:
        "sickle "                 # Sickle, a windowed adaptive trimming tool for FASTQ files using quality
         "{params.command} "      # Paired-end or single-end sequence trimming
@@ -896,6 +946,8 @@ rule cutadapt_adapters_removing:
         revreads = temp("results/01_Trimming/cutadapt/{sample}_cutadapt-removed_R2.fastq.gz")
     log:
         "results/11_Reports/cutadapt/{sample}.log"
+    threads: 
+        CPUS
     shell:
        "cutadapt "                           # Cutadapt, finds and removes unwanted sequence from your HT-seq reads
         "--cores {resources.cpus} "          # -j: Number of CPU cores to use. Use 0 to auto-detect (default: 1)
@@ -927,10 +979,10 @@ rule multiqc_reports_aggregation:
         fastqscreen = "results/00_Quality_Control/fastq-screen/"
     output:
         multiqc = directory("results/00_Quality_Control/multiqc/")
-        #report("results/00_Quality/multiqc/multiqc.html", caption="../report/multiqc.rst", category="Quality control"),
-        
     log:
         "results/11_Reports/quality/multiqc.log"
+    threads: 
+        CPUS
     shell:
         "multiqc "                  # Multiqc, searches in given directories for analysis & compiles a HTML report
         "--quiet "                   # -q: Only show log warning
@@ -960,6 +1012,8 @@ rule fastqscreen_contamination_checking:
         fastqscreen = directory("results/00_Quality_Control/fastq-screen/")
     log:
         "results/11_Reports/quality/fastq-screen.log"
+    threads: 
+        CPUS
     shell:
         "fastq_screen "                  # FastqScreen, what did you expect ?
         "-q "                            # --quiet: Only show log warning
@@ -987,6 +1041,8 @@ rule fastqc_quality_control:
         fastqc = directory("results/00_Quality_Control/fastqc/")
     log:
         "results/11_Reports/quality/fastqc.log"
+    threads: 
+        CPUS
     shell:
         "mkdir -p {output.fastqc} "     # (*) this directory must exist as the program will not create it
         "2> /dev/null && "              # in silence and then...
