@@ -338,7 +338,7 @@ echo ""
 
 mkdir ${workdir}/results/10_Graphs/ 2> /dev/null
 
-graph_list="shave_dag shave_rulegraph shave_filegraph"
+graph_list="dag rulegraph filegraph"
 extention_list="pdf png"
 
 for graph in ${graph_list} ; do
