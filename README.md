@@ -64,8 +64,7 @@ Written for **MOVE-ADAPT** project.
 - Variant filtering,
 - VCF compression,
 - Genome coverage statistics,
-- View intervals in IGV,  
-- Consensus sequences (_fasta file_)
+- View intervals in IGV,
 
 ### Version ###
 *V1.2022.10.05*  
@@ -213,7 +212,17 @@ This is the main results :
 
 ### 05_Validation ###
 - **mark-dup.txt**: statistics of all reads, produced by samtools stats, in _txt_ format
-- **realign_fix-mate_sorted.bam**: realigned, fix-mate bam, in _bam_ format
+- **realign_fix-mate_sorted.bam**: realigned, fix-mate sorted bam, in _bam_ format
+- **realign_fix-mate_sorted.bai**: index of realigned, fix-mate sorted bam, in_bam_ format
+
+**callableloci** directory:
+- **realign_fix-mate_sorted_callable_status.bed**: statistics on callable, uncallable, poorly mapped, and other parts of the genome, produced by GATK's CallableLoci, in_bed_ format
+- **summary_table**: summary table produced by GATK's CallableLoci, in _txt_ format
+
+**realigned** directory:
+- **realign.bai**: bam indexes _bai_
+
+ 
 
 ### 10_graphs ###
 - **dag**: directed acyclic graph of jobs, in _pdf_ and _png_ formats

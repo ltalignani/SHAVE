@@ -98,15 +98,15 @@ rule all:
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        igv_output = expand("results/03_Coverage/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed",
+        stats = expand("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.txt",
+                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),        
+        igv_output = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         realigned_fixed_bam = expand("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         indelqual = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         covstats = expand("results/03_Coverage/{sample}_{aligner}_{mincov}X_coverage-stats.tsv",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        stats = expand("results/05_Validation/{sample}_{aligner}_mark-dup.txt",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV)
 
 ###############################################################################
@@ -162,6 +162,30 @@ rule validate_sam:
         """
         picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} --VERBOSITY ERROR > {log} 2>&1
         """
+###############################################################################
+rule samtools_stats:
+    # Aim: Collects statistics from BAM files
+    # Use: samtools stats -r ref.fa input.bam
+    message:
+        "SamTools indexing marked as duplicate BAM file {wildcards.sample} sample ({wildcards.aligner})"
+    conda:
+        SAMTOOLS
+    resources:
+       cpus = CPUS
+    input:
+        bam = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
+        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta"
+    output:
+        stats = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.txt"
+    log:
+        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.log"
+    shell:
+        "samtools stats "                                                   # Samtools stats, collects statistics from BAM files. The output can be visualized using plot-bamstats.
+        "--threads {resources.cpus} "                                       # -@: Number of additional threads to use (default: 1)
+        "-r {input.refpath} "                                               # -r: Reference sequence (required for GC-depth and mismatches-per-cycle calculation).
+        "{input.bam} "                                                      # mark-dup bam input
+        "1> {output.stats} "                                                # stats output
+        "2> {log}"                                                          # Log redirection
 
 ###############################################################################
 rule samtools_index_post_realign:
@@ -289,7 +313,7 @@ rule indelrealigner:
     input:
         bam = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",
         reference = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        target_intervals = "results/04_Variants/realignertargetcreator/{sample}_{aligner}_{mincov}X.intervals"
+        target_intervals = "results/04_Variants/{sample}_{aligner}_{mincov}X.intervals"
     output:
         realigned_bam = temp("results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign.bam"), 
     benchmark:
@@ -318,11 +342,11 @@ rule awk_intervals_for_IGV:
     conda:
         GAWK
     input:
-        intervals="results/04_Variants/realignertargetcreator/{sample}_{aligner}_{mincov}X.intervals"
+        intervals="results/04_Variants/{sample}_{aligner}_{mincov}X.intervals"
     params:
         cmd = r"""'BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}'"""
     output:
-        bed = "results/03_Coverage/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed"
+        bed = "results/04_Variants/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed"
     log:
         "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_min-cov-filt.log"
     shell:
@@ -351,7 +375,7 @@ rule realignertargetcreator:
         bam = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",
         index = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bai"
     output:
-        intervals = "results/04_Variants/realignertargetcreator/{sample}_{aligner}_{mincov}X.intervals"
+        intervals = temp("results/04_Variants/{sample}_{aligner}_{mincov}X.intervals")
     benchmark:
         "benchmarks/realignertargetcreator/{sample}_{aligner}_{mincov}X.tsv"
     log:
@@ -539,31 +563,6 @@ rule bedtools_genome_coverage:
         "-ibam {input.markdup} "  # The input file is in BAM format, must be sorted by position
         "1> {output.genomecov} "  # BedGraph output
         "2> {log} "               # Log redirection
-
-###############################################################################
-rule samtools_stats:
-    # Aim: Collects statistics from BAM files
-    # Use: samtools stats -r ref.fa input.bam
-    message:
-        "SamTools indexing marked as duplicate BAM file {wildcards.sample} sample ({wildcards.aligner})"
-    conda:
-        SAMTOOLS
-    resources:
-       cpus = CPUS
-    input:
-        bam = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam",
-        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta"
-    output:
-        stats = "results/05_Validation/{sample}_{aligner}_mark-dup.txt"
-    log:
-        "results/11_Reports/samtools/{sample}_{aligner}_mark-dup.log"
-    shell:
-        "samtools stats "                                                   # Samtools stats, collects statistics from BAM files. The output can be visualized using plot-bamstats.
-        "--threads {resources.cpus} "                                       # -@: Number of additional threads to use (default: 1)
-        "-r {input.refpath} "                                               # -r: Reference sequence (required for GC-depth and mismatches-per-cycle calculation).
-        "{input.bam} "                                                      # mark-dup bam input
-        "1> {output.stats} "                                                # stats output
-        "2> {log}"                                                          # Log redirection
 
 ###############################################################################
 rule samtools_index_markdup:
