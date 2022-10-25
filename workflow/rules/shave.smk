@@ -89,6 +89,41 @@ IUPAC = config["consensus"]["iupac"]                # Output variants in the for
 #AWK_CMD_INTERVALS = r"""'BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}'"""
 
 ###############################################################################
+onstart:
+    print("##### Creating profile pipeline #####\n") 
+    print("\t Creating jobs output subfolders...\n")
+    shell("mkdir -p Cluster_logs/callable_loci")
+    shell("mkdir -p Cluster_logs/validate_sam")
+    shell("mkdir -p Cluster_logs/samtools_stats")
+    shell("mkdir -p Cluster_logs/samtools_index_post_realign")
+    shell("mkdir -p Cluster_logs/samtools_sort_post_realign")
+    shell("mkdir -p Cluster_logs/samtools_sortbynames_post_realign")
+    shell("mkdir -p Cluster_logs/samtools_fixmate_post_realign")
+    shell("mkdir -p Cluster_logs/indelrealigner")
+    shell("mkdir -p Cluster_logs/awk_intervals_for_IGV")
+    shell("mkdir -p Cluster_logs/realignertargetcreator")
+    shell("mkdir -p Cluster_logs/samtools_indel_indexing")
+    shell("mkdir -p Cluster_logs/lofreq_indel_qualities")
+    shell("mkdir -p Cluster_logs/bedtools_masking")
+    shell("mkdir -p Cluster_logs/bedtools_merged_mask")
+    shell("mkdir -p Cluster_logs/awk_mincovfilt")
+    shell("mkdir -p Cluster_logs/awk_coverage_stats")
+    shell("mkdir -p Cluster_logs/bedtools_genome_coverage")
+    shell("mkdir -p Cluster_logs/samtools_index_markdup")
+    shell("mkdir -p Cluster_logs/samtools_markdup")
+    shell("mkdir -p Cluster_logs/samtools_calmd")
+    shell("mkdir -p Cluster_logs/samtools_sorting")
+    shell("mkdir -p Cluster_logs/samtools_fixmate")
+    shell("mkdir -p Cluster_logs/samtools_sortbynames")
+    shell("mkdir -p Cluster_logs/bwa_mapping")
+    shell("mkdir -p Cluster_logs/bowtie2_mapping")
+    shell("mkdir -p Cluster_logs/sickle_trim_quality")
+    shell("mkdir -p Cluster_logs/cutadapt_adapters_removing")
+    shell("mkdir -p Cluster_logs/fastqscreen_contamination_checking")
+    shell("mkdir -p Cluster_logs/fastqc_quality_control")
+    shell("mkdir -p Cluster_logs/multiqc_reports_aggregation")
+
+###############################################################################
 rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
