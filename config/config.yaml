@@ -50,7 +50,7 @@ conda:
     samtools: "../envs/linux/samtools-1.15.1.yaml" # Samtools     ver. 1.15.1
     sickle-trim: "../envs/linux/sickle-trim-1.33.yaml" # Sickle-trim  ver. 1.33
     gatk: "../envs/linux/gatk-3.8.yaml" # gatk ver. 3.8
-    gatk4: "" # gatk ver. 4.0.5.1
+    gatk4: "../envs/linux/gatk-4.3.0.0.yaml" # gatk ver. 4.0.5.1
     picard: "../envs/linux/picard-2.27.4.yaml" # picard ver. 2.27.4
 
 ### ALIGNER ------------------------------------------------------------------------------------------

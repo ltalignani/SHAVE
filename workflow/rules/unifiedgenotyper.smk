@@ -95,6 +95,10 @@ onstart:
     shell("mkdir -p Cluster_logs/unifiedgenotyper")
     shell("mkdir -p Cluster_logs/samtools_index")
 
+import shutil
+onsuccess:
+    shutil.rmtree(".snakemake")
+    
 ###############################################################################
 rule all:
     input:

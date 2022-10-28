@@ -77,7 +77,7 @@ else
     exit 1
 fi
 
-echo -e "                        ${ylo}Brand(R)${nc} | ${ylo}Type(R)${nc} | ${ylo}Model${nc} | ${ylo}@ Speed GHz${nc}" # Print header chip model name
+echo -e "${ylo}Brand(R)${nc} | ${ylo}Type(R)${nc} | ${ylo}Model${nc} | ${ylo}@ Speed GHz${nc}" # Print header chip model name
 echo -e "${blue}Chip Model Name${nc} _______ ${model_name}"                     # Print chip model name
 echo -e "${blue}Physical CPUs${nc} _________ ${red}${physical_cpu}${nc} cores" # Print physical cpu
 echo -e "${blue}Logical CPUs${nc} __________ ${red}${logical_cpu}${nc} threads" # Print logical cpu

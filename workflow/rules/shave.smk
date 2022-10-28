@@ -123,6 +123,10 @@ onstart:
     shell("mkdir -p Cluster_logs/fastqc_quality_control")
     shell("mkdir -p Cluster_logs/multiqc_reports_aggregation")
 
+import shutil
+onsuccess:
+    shutil.rmtree(".snakemake")
+    
 ###############################################################################
 rule all:
     input:

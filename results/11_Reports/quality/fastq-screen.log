@@ -1,2 +1,0 @@
-Output directory 'results/00_Quality_Control/fastq-screen' does not exist, creating directory
-Skipping DATABASE 'Aedes' since no BWA index was found at 'resources/indexes/bwa/GCA_018104305.1_AalbF3_genomic'
