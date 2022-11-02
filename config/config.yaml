@@ -11,7 +11,7 @@
 
 resources:
   cpus: 10 # Set maximum cpus usage (for multithreading, default: 8) [INT]
-  mem_gb: 16 # Set maximum memory unsage (in Gb, default: 4) [INT]
+  mem_gb: 16 # Set maximum memory usage (in Gb, default: 4) [INT]
   tmpdir: "$TMPDIR" # Temporary directory (default: '$TMPDIR')
   ## Examples:
   ## '$TMPDIR'  # System variable $TMPDIR (dafault)

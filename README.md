@@ -173,68 +173,79 @@ This is the main results :
 - **All_readsQC_reports.html**: all reads quality reports from MultiQC, in _html_ format
 
 ### 00_Quality_Control ###
-- **fastq-screen**: raw reads putative contaminations reports for each samples, in _html_, _png_ and _txt_ formats 
-- **fastqc**: raw reads quality reports for each samples, in _html_ and _zip_ formats
-- **multiqc**: fastq-screen and fastqc results agregation report for all samples, in _html_ format
+
+| File | Object |
+|:--- | :--- |
+| **fastq-screen** | raw reads putative contaminations reports for each samples, in _html_, _png_ and _txt_ formats |
+| **fastqc** | raw reads quality reports for each samples, in _html_ and _zip_ formats |
+| **multiqc** | fastq-screen and fastqc results agregation report for all samples, in _html_ format |
 
 ### 01_Trimming ###
-- **sickle/ directory**: paired reads, without adapters and quality trimmed, in _fastq.gz_ format
-- _cutadapt/ directory: paired reads, without adapters (default config: tempdir, removed, save disk usage)_
+| File | Object |
+|:--- | :--- |
+| **sickle/ directory** | paired reads, without adapters and quality trimmed, in _fastq.gz_ format |
+| _cutadapt/ directory_ | paired reads, without adapters (default config: tempdir, removed, save disk usage)_ |
 
 ### 02_Mapping ###
-- **markdup.bam**: read alignments, MD/NM tagged in _bam_ format _(can be visualized in, i.e. IGV)_
-- **markdup.bai**: bam indexes _bai_ use in i.e. IGV with _./resources/genomes/AalbF3.fasta_
-- _mapped.sam_: (default config: tempdir, removed, save disk usage)_
-- _sortbynames.bam_: (default config: tempdir, removed, save disk usage)_
-- _fixmate.bam_: (default config: tempdir, removed, save disk usage)_
-- _sorted.bam_: (default config: tempdir, removed, save disk usage)_
-- _sorted_MD.bam_ : (default config: tempdir, removed, save disk usage)_
+| File | Object |
+|:--- | :--- |
+| **markdup.bam** | read alignments, MD/NM tagged in _bam_ format _(can be visualized in, i.e. IGV)_ |
+| **markdup.bai** | bam indexes _bai_ use in i.e. IGV with _./resources/genomes/AalbF3.fasta_ |
+| _mapped.sam_ | (default config: tempdir, removed, save disk usage)_ |
+| _sortbynames.bam_ | (default config: tempdir, removed, save disk usage)_ |
+| _fixmate.bam_ | (default config: tempdir, removed, save disk usage)_ |
+| _sorted.bam_ | (default config: tempdir, removed, save disk usage)_ |
+| _sorted_MD.bam_ | (default config: tempdir, removed, save disk usage)_ |
 
 ### 03_Coverage ###
-- **coverage-stats.tsv**: information about genome coverage, in _tsv_ format containing mean coverage depth across all genome reference sequence, standard deviation for mean-depth and genome reference coverage percentage at at-least n X of depth.
+| File | Object |
+|:--- | :--- |
+| **coverage-stats.tsv** | information about genome coverage, in _tsv_ format containing mean coverage depth across all genome reference sequence, standard deviation for mean-depth and genome reference coverage percentage at at-least n X of depth. |
 
 ### 04_Variants ###
-- **maskedref.fasta**: reference sequence, masked for low coverage regions, in _fasta_ format
-- **maskedref.fasta.fai**: reference sequence indexes, masked for low coverages regions, in _fai_ format
-- **indelqual.bam**: read alignments with indel qualities, in _bam_ format _(can be visualized in, i.e. IGV)_
-- **indelqual.bai**: bam indexes _bai_ use in i.e. IGV with _./results/04_Variants/maskedref.fasta_
-
-**realignedtargetcreator** directory:
-
-- **.intervals** : RealignerTargetCreator intervals file for IndelRealigner, in _intervals_ format
-
-**unifiedgenotyper** directory:
-
-- **variantcall.vcf**: SNVs and Indels calling in _vcf_ format
-- **variantfilt.vcf**: SNVs and Indels passing filters, in _vcf_ format
-- **variantfilt.vcf.gz**: SNVs and Indels passing filters archive, in _vcf.bgz_ format
-- **variantfilt.vcf.gz.tbi**: SNVs and Indels passing filters archive indexed, in _vcf.bgz.tbi_ format
+| File | Object |
+|:--- | :--- |
+| **maskedref.fasta** | reference sequence, masked for low coverage regions, in _fasta_ format |
+| **maskedref.fasta.fai** | reference sequence indexes, masked for low coverages regions, in _fai_ format |
+| **indelqual.bam** | read alignments with indel qualities, in _bam_ format _(can be visualized in, i.e. IGV)_ |
+| **indelqual.bai** | bam indexes _bai_ use in i.e. IGV with _./results/04_Variants/maskedref.fasta_ |
+|  |  |
+| **realignedtargetcreator** directory: |  |
+| **.intervals** | RealignerTargetCreator intervals file for IndelRealigner, in _intervals_ format |
+|  |  |
+| **unifiedgenotyper** directory: |  |
+| **variantcall.vcf** | SNVs and Indels calling in _vcf_ format |
+| **variantfilt.vcf** | SNVs and Indels passing filters, in _vcf_ format |
+| **variantfilt.vcf.gz** | SNVs and Indels passing filters archive, in _vcf.bgz_ format |
+| **variantfilt.vcf.gz.tbi** | SNVs and Indels passing filters archive indexed, in _vcf.bgz.tbi_ format |
 
 ### 05_Validation ###
-- **mark-dup.txt**: statistics of all reads, produced by samtools stats, in _txt_ format
-- **realign_fix-mate_sorted.bam**: realigned, fix-mate sorted bam, in _bam_ format
-- **realign_fix-mate_sorted.bai**: index of realigned, fix-mate sorted bam, in_bam_ format
-
-**callableloci** directory:
-- **realign_fix-mate_sorted_callable_status.bed**: statistics on callable, uncallable, poorly mapped, and other parts of the genome, produced by GATK's CallableLoci, in_bed_ format
-- **summary_table**: summary table produced by GATK's CallableLoci, in _txt_ format
-
-**realigned** directory:
-- **realign.bai**: bam indexes _bai_
+| File | Object |
+|:--- | :--- |
+| **mark-dup.txt** | statistics of all reads, produced by samtools stats, in _txt_ format |
+| **realign_fix-mate_sorted.bam** | realigned, fix-mate sorted bam, in _bam_ format |
+| **realign_fix-mate_sorted.bai** | index of realigned, fix-mate sorted bam, in_bam_ format |
+|  |  |
+| **callableloci** directory: |  |
+| **realign_fix-mate_sorted_callable_status.bed** | statistics on callable, uncallable, poorly mapped, and other parts of the genome, produced by GATK's CallableLoci, in_bed_ format |
+| **summary_table** | summary table produced by GATK's CallableLoci, in _txt_ format |
+|  |  |
+| **realigned** directory: |  |
+| **realign.bai** | bam indexes in _bai_ format |
 
  
-
 ### 10_graphs ###
-- **dag**: directed acyclic graph of jobs, in _pdf_ and _png_ formats
-- **rulegraph**: dependency graph of rules, in _pdf_ and _png_ formats  
-_(less crowded than above DAG of jobs, but also show less information)_  
-- **filegraph**: dependency graph of rules with their input and output files in the dot language, in _pdf_ and _png_ formats  
-_(an intermediate solution between above DAG of jobs and the rule graph)_  
+| File | Object |
+|:--- | :--- |
+| **dag** | directed acyclic graph of jobs, in _pdf_ and _png_ formats |
+| **rulegraph** | dependency graph of rules, in _pdf_ and _png_ formats _(less crowded than above DAG of jobs, but also show less information)_  |
+| **filegraph** | dependency graph of rules with their input and output files in the dot language, in _pdf_ and _png_ formats _(an intermediate solution between above DAG of jobs and the rule graph)_ |
 
 ### 11_Reports ###
-- All _non-empty_ **log** for each tool and each sample
-- files_summary.txt: summary of all files created by the workflow, in _txt_ format  
-_(columns: filename, modification time, rule version, status, plan)_
+| File | Object |
+|:--- | :--- |
+| **.log** | All _non-empty_ **log** for each tool and each sample |
+| files_summary.txt | summary of all files created by the workflow, in _txt_ format  _(columns: filename, modification time, rule version, status, plan)_ |
 
 
 ## ~ CONFIGURATION ~ ##
