@@ -88,7 +88,7 @@ IUPAC = config["consensus"]["iupac"]                # Output variants in the for
 # look for "robust quoting for snakemake for more info".
 #AWK_CMD_INTERVALS = r"""'BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}'"""
 
-###############################################################################
+#################### O N S T A R T ######################################
 onstart:
     print("##### Creating profile pipeline #####\n") 
     print("\t Creating jobs output subfolders...\n")
@@ -123,7 +123,7 @@ onstart:
     shell("mkdir -p Cluster_logs/fastqc_quality_control")
     shell("mkdir -p Cluster_logs/multiqc_reports_aggregation")
 
-###############################################################################
+#################### A L L ###################################################
 rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
@@ -174,12 +174,10 @@ rule callable_loci:
         summary = "results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_summary_table.txt"
     threads: 
         CPUS
-    params:
-        java_opts="-Xmx{resources.mem_gb}G"
     log :
         "results/11_reports/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.log"
     shell:
-        "gatk3 {java_opts} -T CallableLoci -R {input.refpath} -I {input.sort} -summary {output.summary} -o {output.call}" #  > {log} 2>&1
+        "gatk3 -T CallableLoci -R {input.refpath} -I {input.sort} -summary {output.summary} -o {output.call}" #  > {log} 2>&1
 
 ###############################################################################
 rule validate_sam:
@@ -189,6 +187,8 @@ rule validate_sam:
     #      - MODE SUMMARY
     message:
         "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
+    conda:
+        PICARD
     input:
         sorted = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
         index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai",
@@ -197,12 +197,12 @@ rule validate_sam:
         check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt"
     log:
         "results/11_Reports/validatesamfiles/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
-    threads: 
-        CPUS
     shell:
         """
-        picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} --VERBOSITY ERROR > {log} 2>&1
+        picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} -MODE SUMMARY 
         """
+    # > {log} 2>&1
+
 ###############################################################################
 rule samtools_stats:
     # Aim: Collects statistics from BAM files
@@ -367,10 +367,8 @@ rule indelrealigner:
         CPUS
     resources:
         mem_gb = MEM_GB
-    params:
-        java_opts="-Xmx{resources.mem_gb}G"
     shell:
-        "gatk3 {java_opts} -T IndelRealigner "          
+        "gatk3 -T IndelRealigner "          
         "-R {input.reference} "
         "-targetIntervals {input.target_intervals} "        
         "-I {input.bam} "
@@ -431,10 +429,8 @@ rule realignertargetcreator:
         mem_gb = MEM_GB
     threads: 
         CPUS
-    params:
-        java_opts="-Xmx{resources.mem_gb}G"
     shell:
-        "gatk3 {java_opts} -T RealignerTargetCreator "
+        "gatk3 -T RealignerTargetCreator "
         "-R {input.reference} "
         "-I {input.bam} "
         "-o {output.intervals} "
@@ -738,7 +734,9 @@ rule samtools_sorting:
 
 ###############################################################################
 rule samtools_fixmate:
-    # Aim: filling in mate coordinates
+    # Aim: This tool fills in mate coordinates, ISIZE and mate related flags fom a name-sorted or a name-collated alignment. 
+    # This means that before using samtools-fixmate, samtools-sort with the option of sorting by name must be used.
+    # Samtools-fixmate is usually the previous step to using samtools-markdup.
     # Use: samtools fixmate -@ [THREADS] -m -O BAM [SORTBYNAMES.bam] [FIXMATE.bam]
     message:
         "SamTools filling in mate coordinates {wildcards.sample} sample reads ({wildcards.aligner})"
@@ -817,7 +815,7 @@ rule bwa_mapping:
         "-T 0 "                                                     # Don’t output alignment with score lower than INT. This option only affects output.
         "-t {resources.cpus} "                                      # -t: Number of threads (default: 12)
         "-v 1 "                                                     # -v: Verbosity level: 1=error, 2=warning, 3=message, 4+=debugging
-        "{params.extra} "                                            #
+        "{params.extra} "                                           #
         "{params.bwapath}{params.reference} "                       # Reference index filename prefix
         "{input.fwdreads} "                                         # Forward input reads
         "{input.revreads} "                                         # Reverse input reads

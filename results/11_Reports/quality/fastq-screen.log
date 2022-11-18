@@ -1,0 +1,3 @@
+Output directory 'results/00_Quality_Control/fastq-screen' does not exist, creating directory
+Skipping DATABASE 'Aedes' since no BWA index was found at 'resources/indexes/bwa/GCA_018104305.1_AalbF3_genomic'
+sh: line 1: 87855 Segmentation fault: 11  /Users/loictalignani/snakemake-models/shave/.snakemake/conda/e43b2bd01d9a514247f2e099bd2ae42d/bin/bwa mem -a -t 10 resources/indexes/bwa/Adapters '/Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastq-screen/ERR3343471_R2.fastq.gz_temp_subset.fastq' 2> /Users/loictalignani/snakemake-models/shave/results/00_Quality_Control/fastq-screen/aligner_standard_error.bfIZjZ_6.txt
