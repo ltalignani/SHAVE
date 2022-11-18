@@ -15,7 +15,7 @@ resources:
   tmpdir: "$TMPDIR" # Temporary directory (default: '$TMPDIR')
   ## Examples:
   ## '$TMPDIR'  # System variable $TMPDIR (dafault)
-  ## '.'        # Local (i.e. GeVarLi root directory)
+  ## '.'        # Local (i.e. Shave root directory)
   ## '/scratch' # HPC (set it to match your HPC usage)
 
 ### ENVIRONNEMENTS -----------------------------------------------------------------------------------

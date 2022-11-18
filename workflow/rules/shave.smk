@@ -129,6 +129,8 @@ rule all:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        validatesam = expand("results/05_Validation/validatesamfile/{sample}_{aligner}_validate_sam.txt",
+                            sample= SAMPLE, aligner = ALIGNER),
         check = expand("results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt",
                             sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
         callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
@@ -199,14 +201,13 @@ rule validate_sam:
         "results/11_Reports/validatesamfiles/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
     shell:
         """
-        picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} -MODE SUMMARY 
+        picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} -MODE VERBOSE
         """
-    # > {log} 2>&1
 
 ###############################################################################
 rule samtools_stats:
     # Aim: Collects statistics from BAM files
-    # Use: samtools stats -r ref.fa input.bam
+    # Use: samtools stats -r ref.fa input.bam # -r: Reference sequence (required for GC-depth and mismatches-per-cycle calculation).
     message:
         "SamTools indexing marked as duplicate BAM file {wildcards.sample} sample ({wildcards.aligner})"
     conda:
@@ -221,17 +222,14 @@ rule samtools_stats:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.log"
     shell:
-        "samtools stats "                                                   # Samtools stats, collects statistics from BAM files. The output can be visualized using plot-bamstats.
-        "--threads {resources.cpus} "                                       # -@: Number of additional threads to use (default: 1)
-        "-r {input.refpath} "                                               # -r: Reference sequence (required for GC-depth and mismatches-per-cycle calculation).
-        "{input.bam} "                                                      # mark-dup bam input
-        "1> {output.stats} "                                                # stats output
-        "2> {log}"                                                          # Log redirection
+        """
+        samtools stats --threads {resources.cpus} -r {input.refpath} {input.bam} 1> {output.stats} 2> {log}
+        """
 
 ###############################################################################
 rule samtools_index_post_realign:
     # Aim: indexing marked as duplicate BAM file
-    # Use: samtools index -@ [THREADS] -b [MARKDUP.bam] [INDEX.bai]
+    # Use: samtools index -@ [THREADS] -b [MARKDUP.bam] [INDEX.bai] # -b: Generate BAI-format index for BAM files (default)
     message:
         "SamTools indexing realigned fixed-mate sorted BAM file {wildcards.sample} sample ({wildcards.aligner}) for Picard ValidateSamFile"
     conda:
@@ -247,17 +245,14 @@ rule samtools_index_post_realign:
     threads: 
         CPUS
     shell:
-        "samtools index "     # Samtools index, tools for alignments in the SAM format with command to index alignment
-        "-@ {resources.cpus} " # --threads: Number of additional threads to use (default: 1)
-        "-b "                  # -b: Generate BAI-format index for BAM files (default)
-        "{input.sortedbam} "     # Markdup bam input
-        "{output.index} "      # Markdup index output
-        "&> {log}"             # Log redirection
+        """
+        samtools index -@ {resources.cpus} -b {input.sortedbam} {output.index} &> {log}
+        """
 
 ###############################################################################
 rule samtools_sort_post_realign:
     # Aim: sorting
-    # Use: samtools sort -@ [THREADS] -m [MEM] -T [TMPDIR] -O BAM -o [SORTED.bam] [FIXMATE.bam]
+    # Use: samtools sort -@ [THREADS] -m [MEM] -T [TMPDIR] -O BAM -o [SORTED.bam] [FIXMATE.bam] # -T: Write temporary files to PREFIX.nnnn.bam
     message:
         "SamTools sorting {wildcards.sample} sample reads ({wildcards.aligner})"
     conda:
@@ -274,14 +269,16 @@ rule samtools_sort_post_realign:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.log"
     shell:
-        "samtools sort "              # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
-        "--threads {resources.cpus} "  # -@: Number of additional threads to use (default: 1)
-        "-m {resources.mem_gb}G "      # -m: Set maximum memory per thread, suffix K/M/G recognized (default: 768M)
-        "-T {params.tmpdir} "          # -T: Write temporary files to PREFIX.nnnn.bam
-        "--output-fmt BAM "            # -O: Specify output format: SAM, BAM, CRAM (here, BAM format)
-        "-o {output.sorted} "          # Sorted bam output
-        "{input.fixmate} "             # Fixmate bam input
-        "&> {log}"                     # Log redirection
+        """
+        samtools sort 
+        --threads {resources.cpus} 
+        -m {resources.mem_gb}G 
+        -T {params.tmpdir} 
+        --output-fmt BAM 
+        -o {output.sorted} 
+        {input.fixmate} 
+        &> {log}
+        """
 
 ###############################################################################
 rule samtools_fixmate_post_realign:
@@ -300,18 +297,14 @@ rule samtools_fixmate_post_realign:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_fixmate.log"
     shell:
-        "samtools fixmate "             # Samtools fixmate, tools for alignments in the SAM format with command to fix mate information
-        "--threads {resources.cpus} "   # -@: Number of additional threads to use (default: 1)
-        "-m "                           # -m: Add mate score tag
-        "--output-fmt BAM "             # -O: Specify output format: SAM, BAM, CRAM (here, BAM format)
-        "{input.realignedbynames} "     # Sortbynames bam input
-        "{output.fixmate} "             # Fixmate bam output
-        "&> {log}"                      # Log redirection
+        """
+        samtools fixmate --threads {resources.cpus} -m --output-fmt BAM {input.realignedbynames} {output.fixmate} &> {log} 
+        """
 
 ###############################################################################
 rule samtools_sortbynames_post_realign:
     # Aim: sorting by names
-    # Use: samtools sort -t [THREADS] -n -O BAM -o [SORTBYNAMES.bam] [MAPPED.sam]
+    # Use: samtools sort -t [THREADS] -n -O BAM -o [SORTBYNAMES.bam] [MAPPED.sam] # -n: Sort by read name (not compatible with samtools index command)
     message:
         "SamTools sorting by names {wildcards.sample} sample reads ({wildcards.aligner})"
     conda:
@@ -326,14 +319,9 @@ rule samtools_sortbynames_post_realign:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_sort-by-names.log"
     shell:
-        "samtools sort "                        # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
-        "--threads {resources.cpus} "           # -@: Number of additional threads to use (default: 1)
-        "-m {resources.mem_gb}G "               # -m: Set maximum memory per thread, suffix K/M/G recognized (default: 768M)
-        "-n "                                   # -n: Sort by read name (not compatible with samtools index command)
-        "--output-fmt BAM "                     # -O: Specify output format: SAM, BAM, CRAM (here, BAM format)
-        "-o {output.realignedbynames} "         # -o: Write final output to FILE rather than standard output
-        "{input.realigned_bam} "                # Mapped reads input
-        "&> {log}"                              # Log redirection
+        """
+        samtools sort --threads {resources.cpus} -m {resources.mem_gb}G -n --output-fmt BAM -o {output.realignedbynames} {input.realigned_bam} &> {log}
+        """
 
 ###############################################################################
 rule indelrealigner:
@@ -368,12 +356,14 @@ rule indelrealigner:
     resources:
         mem_gb = MEM_GB
     shell:
-        "gatk3 -T IndelRealigner "          
-        "-R {input.reference} "
-        "-targetIntervals {input.target_intervals} "        
-        "-I {input.bam} "
-        "-o {output.realigned_bam} " 
-        "&> {log}"
+        """
+        gatk3 -T IndelRealigner 
+        -R {input.reference} 
+        -targetIntervals {input.target_intervals} 
+        -I {input.bam} 
+        -o {output.realigned_bam} 
+        &> {log}
+        """
 
 ###############################################################################
 rule awk_intervals_for_IGV:
@@ -430,11 +420,13 @@ rule realignertargetcreator:
     threads: 
         CPUS
     shell:
-        "gatk3 -T RealignerTargetCreator "
-        "-R {input.reference} "
-        "-I {input.bam} "
-        "-o {output.intervals} "
-        "&> {log}"
+        """
+        gatk3 -T RealignerTargetCreator 
+        -R {input.reference} 
+        -I {input.bam} 
+        -o {output.intervals} 
+        &> {log}
+        """
 
 ###############################################################################
 rule samtools_indel_indexing:
@@ -455,12 +447,9 @@ rule samtools_indel_indexing:
     threads: 
         CPUS
     shell:
-        "samtools index "      # Samtools index, tools for alignments in the SAM format with command to index alignment
-        "-@ {resources.cpus} " # Number of additional threads to use (default: 0)
-        "-b "                  # -b: Generate BAI-format index for BAM files (default)
-        "{input.indelqual} "   # Sorted bam input
-        "{output.index} "      # Markdup bam output
-        "&> {log}"             # Log redirection
+        """
+        samtools index -@ {resources.cpus} -b {input.indelqual} {output.index} &> {log}
+        """
 
 ###############################################################################
 rule lofreq_indel_qualities:
@@ -482,13 +471,9 @@ rule lofreq_indel_qualities:
     threads: 
         CPUS
     shell:
-        "lofreq "                   # LoFreq, fast and sensitive inference of SNVs and Indels
-        "indelqual "                # Insert indel qualities into BAM file (required for indel predictions)
-        "--dindel "                 # Add Dindel's indel qualities Illumina specifics (need --ref and clashes with -u)
-        "--ref {input.maskedref} "  # -f: Reference (masked) sequence used for mapping (only required for --dindel)
-        "--out {output.indelqual} " # -o: Indel BAM file output (default: standard output)
-        "{input.markdup} "          # Markdup BAM input
-        "&> {log}"                  # Log redirection
+        """
+        lofreq indelqual --dindel --ref {input.maskedref} --out {output.indelqual} {input.markdup} &> {log}
+        """
 
 ###############################################################################
 rule bedtools_masking:
@@ -509,11 +494,9 @@ rule bedtools_masking:
     threads: 
         CPUS
     shell:
-        "bedtools maskfasta "                        # Bedtools maskfasta, mask a fasta file based on feature coordinates
-        "-fi {params.path} "       # Input FASTA file
-        "-bed {input.lowcovmask} "                   # BED/GFF/VCF file of ranges to mask in -fi
-        "-fo {output.maskedref} "                    # Output masked FASTA file
-        "&> {log}"                                   # Log redirection
+        """
+        bedtools maskfasta -fi {params.path} -bed {input.lowcovmask} -fo {output.maskedref} &> {log}
+        """
 
 ###############################################################################
 rule bedtools_merged_mask:
@@ -532,10 +515,9 @@ rule bedtools_merged_mask:
     threads: 
         CPUS
     shell:
-        "bedtools merge "        # Bedtools merge, merges overlapping BED/GFF/VCF entries into a single interval
-        "-i {input.mincovfilt} "  # -i: BED/GFF/VCF input to merge
-        "1> {output.lowcovmask} " # merged output
-        "2> {log}"                # Log redirection
+        """
+        bedtools merge -i {input.mincovfilt} 1> {output.lowcovmask} 2> {log}
+        """
 
 ###############################################################################
 rule awk_mincovfilt:
@@ -619,11 +601,9 @@ rule bedtools_genome_coverage:
     log:
         "results/11_Reports/bedtools/{sample}_{aligner}_genome-cov.log"
     shell:
-        "bedtools genomecov "    # Bedtools genomecov, compute the coverage of a feature file among a genome
-        "-bga "                   # Report depth in BedGraph format, regions with zero coverage are also reported
-        "-ibam {input.markdup} "  # The input file is in BAM format, must be sorted by position
-        "1> {output.genomecov} "  # BedGraph output
-        "2> {log} "               # Log redirection
+        """
+        bedtools genomecov -bga -ibam {input.markdup} 1> {output.genomecov} 2> {log}
+        """
 
 ###############################################################################
 rule samtools_index_markdup:
@@ -648,6 +628,28 @@ rule samtools_index_markdup:
         "{input.markdup} "     # Markdup bam input
         "{output.index} "      # Markdup index output
         "&> {log}"             # Log redirection
+
+###############################################################################
+rule validate_sam_markdup:
+    # Aim: Basic check for bam file validity, as interpreted by the Broad Institute.
+    # Use: picard.jar ValidateSamFile \
+    #      -I input.bam \
+    #      -MODE VERBOSE
+    message:
+        "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
+    conda:
+        PICARD
+    input:
+        markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam",
+        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+    output:
+        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_validate_sam.txt"
+    log:
+        "results/11_Reports/validatesamfiles/{sample}_{aligner}_validate_bam_markdup.log"
+    shell:
+        """
+        picard ValidateSamFile -I {input.markdup} -R {input.refpath} -O {output.check} -MODE VERBOSE
+        """
 
 ###############################################################################
 rule samtools_markdup:
@@ -785,6 +787,28 @@ rule samtools_sortbynames:
         "-o {output.sortbynames} "     # -o: Write final output to FILE rather than standard output
         "{input.mapped} "              # Mapped reads input
         "&> {log}"                     # Log redirection
+
+###############################################################################
+rule validate_sam_bwa:
+    # Aim: Basic check for bam file validity, as interpreted by the Broad Institute.
+    # Use: picard.jar ValidateSamFile \
+    #      -I input.bam \
+    #      - MODE SUMMARY
+    message:
+        "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
+    conda:
+        PICARD
+    input:
+        sam = "results/02_Mapping/{sample}_bwa-mapped.sam",
+        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+    output:
+        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_validate_sam.txt"
+    log:
+        "results/11_Reports/validatesamfiles/{sample}_{aligner}_validate_sam.log"
+    shell:
+        """
+        picard ValidateSamFile -I {input.sam} -R {input.refpath} -O {output.check} -MODE VERBOSE
+        """
 
 ###############################################################################
 rule bwa_mapping:
