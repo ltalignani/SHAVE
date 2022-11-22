@@ -146,10 +146,10 @@ rule callable_loci:
         GATK
     input:
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        sort = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
-        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai",
+        sort = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam",
+        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bai",
     output:
-        call = "results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
+        call = "results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_callable_status.bed",
         summary = "results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_summary_table.txt"
     threads: 
         CPUS
@@ -179,6 +179,31 @@ rule validate_sam:
         "results/11_Reports/validatesamfiles/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
     shell:
         "scripts/validatesamfile.sh"
+
+###############################################################################
+rule fixmateinformation:
+    # Aim: This tool ensures that all mate-pair information is in sync between each read and its mate pair.
+    #      If no #OUTPUT file is supplied then the output is written to a temporary file and then copied over 
+    #      the #INPUT file (with the original placed in a .old file.)
+    # Use: picard.jar FixMateInformation \
+    #      -I input.bam \
+    #      -O fixed_mate.bam \
+    #      --ADD_MATE_CIGAR true
+    message:
+        "Picard FixMateInformation for {wildcards.sample} sample ({wildcards.aligner})"
+    conda:
+        PICARD
+    input:
+        sorted = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
+    output:
+        check = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam"
+    threads: CPUS
+    log:
+        "results/11_Reports/fixmateinformation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_validate_bam.log"
+    shell:
+        """
+        picard FixMateInformation -I {input.sorted} -O {output.check} --ADD_MATE_CIGAR true
+        """
 
 ###############################################################################
 rule samtools_stats:
