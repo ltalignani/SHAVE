@@ -19,3 +19,5 @@ resources/indexes/bwa/GCA_018104305.1_AalbF3_genomic.fasta.bwt
 resources/indexes/bwa/GCA_018104305.1_AalbF3_genomic.fasta.pac
 resources/indexes/bwa/GCA_018104305.1_AalbF3_genomic.fasta.sa
 results/04_Variants/ERR3343471_bwa_10X_masked-ref.fasta
+results/02_Mapping/ERR3343471_bwa-mapped.sam
+results/
