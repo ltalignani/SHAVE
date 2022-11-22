@@ -87,13 +87,7 @@ IUPAC = config["consensus"]["iupac"]                # Output variants in the for
 onstart:
     print("##### Creating profile pipeline #####\n") 
     print("\t Creating jobs output subfolders...\n")
-    shell("mkdir -p Cluster_logs/sed_rename_headers")
-    shell("mkdir -p Cluster_logs/bcftools_consensus")
-    shell("mkdir -p Cluster_logs/tabix_tabarch_indexing")
-    shell("mkdir -p Cluster_logs/bcftools_variant_filt_archive")
-    shell("mkdir -p Cluster_logs/hard_filter_calls")
     shell("mkdir -p Cluster_logs/unifiedgenotyper")
-    shell("mkdir -p Cluster_logs/samtools_index")
 
 import shutil
 onsuccess:
@@ -119,11 +113,11 @@ rule sed_rename_headers:
     message:
         "Sed rename header for {wildcards.sample} sample consensus fasta ({wildcards.aligner}-{wildcards.mincov})"
     input:
-        constmp = "results/06_Consensus/{sample}_{aligner}_{mincov}X_consensus.fasta.tmp"
+        constmp = "results/06_Consensus/{sample}_{aligner}_{markdup}_{mincov}X_consensus.fasta.tmp"
     output:
-        consensus = "results/06_Consensus/{sample}_{aligner}_{mincov}X_consensus.fasta"
+        consensus = "results/06_Consensus/{sample}_{aligner}_{markdup}_{mincov}X_consensus.fasta"
     log:
-        "results/11_Reports/sed/{sample}_{aligner}_{mincov}X_fasta-header.log"
+        "results/11_Reports/sed/{sample}_{aligner}_{markdup}_{mincov}X_fasta-header.log"
     shell:
         "sed " # Sed, a Stream EDitor used to perform basic text transformations on an input stream
         "'s/^>.*$/>{wildcards.sample}_{wildcards.aligner}_{wildcards.mincov}/' "
@@ -142,13 +136,13 @@ rule bcftools_consensus:
     params:
         iupac = IUPAC
     input:
-        maskedref = "results/04_Variants/{sample}_{aligner}_{mincov}X_masked-ref.fasta",
-        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.gz",
-        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.gz.tbi"
+        maskedref = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_masked-ref.fasta",
+        archive = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.vcf.gz",
+        index = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.gz.tbi"
     output:
-        constmp = temp("results/06_Consensus/{sample}_{aligner}_{mincov}X_consensus.fasta.tmp")
+        constmp = temp("results/06_Consensus/{sample}_{aligner}_{markdup}_{mincov}X_consensus.fasta.tmp")
     log:
-        "results/11_Reports/bcftools/{sample}_{aligner}_{mincov}X_consensus.log"
+        "results/11_Reports/bcftools/{sample}_{aligner}_{markdup}_{mincov}X_consensus.log"
     shell:
         "bcftools "                       # Bcftools, tools for variant calling and manipulating VCFs and BCFs
         "consensus "                      # Create consensus sequence by applying VCF variants to a reference fasta file
@@ -167,11 +161,11 @@ rule tabix_tabarch_indexing:
     conda:
         SAMTOOLS
     input:
-        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.gz"
+        archive = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.vcf.gz"
     output:
-        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.gz.tbi"
+        index = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.gz.tbi"
     log:
-        "results/11_Reports/tabix/{sample}_{aligner}_{mincov}X_variant-archive-index.log"
+        "results/11_Reports/tabix/{sample}_{aligner}_{markdup}_{mincov}X_variant-archive-index.log"
     shell:
         "tabix "             # Tabix, indexes a TAB-delimited genome position file in.tab.bgz and creates an index file
         "{input.archive} "   # The input data file must be position sorted and compressed by bgzip
@@ -190,11 +184,11 @@ rule bcftools_variant_filt_archive:
     resources:
         cpus = CPUS
     input:
-        variantfilt = "results/04_Variants/variantfiltration/{sample}_{aligner}_{mincov}X_hardfiltered.vcf"                  #results/04_Variants/lofreq/{sample}_{aligner}_{mincov}X_variant-filt.vcf"
+        variantfilt = "results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf"                  #results/04_Variants/lofreq/{sample}_{aligner}_{mincov}X_variant-filt.vcf"
     output:
-        archive = "results/04_Variants/{sample}_{aligner}_{mincov}X_variant-filt.vcf.gz"
+        archive = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.vcf.gz"
     log:
-        "results/11_Reports/bcftools/{sample}_{aligner}_{mincov}X_variant-archive.log"
+        "results/11_Reports/bcftools/{sample}_{aligner}_{markdup}_{mincov}X_variant-archive.log"
     shell:
         "bcftools "                         # bcftools,  a set of utilities that manipulate variant calls in the Variant Call Format (VCF).
         "view "                             # view : subset, filter and convert VCF and BCF files
@@ -217,9 +211,9 @@ rule hard_filter_calls:
         GATK4
     input:
         ref=REFPATH,
-        vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{mincov}X_indels.vcf",
+        vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf",
     output:
-        vcf="results/04_Variants/variantfiltration/{sample}_{aligner}_{mincov}X_hardfiltered.vcf",
+        vcf="results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf",
     params:
         filters={"myfilter": "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"},
         extra="",
@@ -227,7 +221,7 @@ rule hard_filter_calls:
     resources:
         mem_gb=MEM_GB
     log:
-        "results/11_Reports/variantfiltration/{sample}_{aligner}_{mincov}X_hardfiltered.log",
+        "results/11_Reports/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.log",
     wrapper:
         "0.74.0/bio/gatk/variantfiltration"
 
@@ -236,6 +230,7 @@ rule unifiedgenotyper:
     # Aim:  Call variants in sequence data. The following parameters comes from the MalariaGEN
     # Use:  java -jar GenomeAnalysisTK.jar \ 
     #       -T UnifiedGenotyper \
+    #       -nct {threads.cpus} \ # -nt / --num_threads controls the number of data threads sent to the processor 
     #       -I {sample BAM} \
     #       --alleles {alleles VCF} \ : This option has been removed for the moment.  Alleles against which to genotype (VCF format). Given the sites VCF file is fixed for every sample, and we wish to generalise to future sets of sites/alleles, the VCF file describing sites and alleles should be considered a parameter. This file for A. gambiae (AgamP4) is available at
     #       -R {reference sequence} \
@@ -245,18 +240,23 @@ rule unifiedgenotyper:
     conda:
         GATK
     input:
-        bam = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
+        bam = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
         ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai"
+        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai"
         #alleles = ALLELES
     output:
-        vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{mincov}X_indels.vcf"
+        vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf"
     log:
-        "results/11_Reports/unifiedgenotyper/{sample}_{aligner}_{mincov}X.log"
+        "results/11_Reports/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X.log"
+    benchmark:
+        "benchmarks/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X.tsv"
+    threads: 
+        cpus = CPUS
     params:
-        java_opts="-Xmx{resources.mem_gb}G"
+        java_opts="-Xmx16G"
     shell:
         "gatk3 {java_opts} -T UnifiedGenotyper "        # Genome Analysis Tool Kit - Broad Institute UnifiedGenotyper
+        "-nct {threads.cpus} "                          # -nct / --num_cpu_threads_per_data_thread controls the number of CPU threads allocated to each data thread
         "-I {input.bam} "                               # Input indel realigned BAM file
         "-R {input.ref} "                               # Reference sequence in fasta format
         "--out {output.vcf} "                           # Output VCF
@@ -298,11 +298,11 @@ rule samtools_index:
     resources:
        cpus = CPUS
     input:
-        bam = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam"
+        bam = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam"
     output:
-        index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai"
+        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_index.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_index.log"
     shell:
         "samtools index "      # Samtools index, tools for alignments in the SAM format with command to index alignment
         "-@ {resources.cpus} " # Number of additional threads to use (default: 0)

@@ -17,10 +17,9 @@
 configfile: "config/config.yaml"
 
 from snakemake.utils import min_version
+import shutil
 
 min_version("5.18.0")
-
-report: "../report/workflow.rst"
 
 ###############################################################################
 # WILDCARDS #
@@ -68,6 +67,7 @@ MAPPER = config["fastq-screen"]["aligner"]          # Fastq-screen --aligner
 SUBSET = config["fastq-screen"]["subset"]           # Fastq-screen --subset
 
 ALIGNER = config["aligner"]                         # Aligners ('bwa' or 'bowtie2')
+MARKDUP = config["markdup"]                         # Mark Duplicate Program ('picard' or 'samtools')
 
 BWAPATH = config["bwa"]["path"]                     # BWA path to indexes
 BT2PATH = config["bowtie2"]["path"]                 # Bowtie2 path to indexes
@@ -81,72 +81,48 @@ MINAF = config["consensus"]["minaf"]                # Minimum allele frequency a
 IUPAC = config["consensus"]["iupac"]                # Output variants in the form of IUPAC ambiguity codes
 
 ###############################################################################
-# FUNCTIONS ANND COMMANDS #
+# FUNCTIONS AND COMMANDS #
 
 # Output Field Separator = <tab>. if the third column is empty, print col 1, col 2 -1 (transform coordinates from 1-based to 0-based for IGV) and col 2.  
 # else, print the three column and transform the second one in 0-based coordinates.
 # look for "robust quoting for snakemake for more info".
 #AWK_CMD_INTERVALS = r"""'BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}'"""
 
-#################### O N S T A R T ######################################
+############################### O N S T A R T ################################
 onstart:
     print("##### Creating profile pipeline #####\n") 
     print("\t Creating jobs output subfolders...\n")
-    shell("mkdir -p Cluster_logs/callable_loci")
-    shell("mkdir -p Cluster_logs/validate_sam")
-    shell("mkdir -p Cluster_logs/samtools_stats")
-    shell("mkdir -p Cluster_logs/samtools_index_post_realign")
-    shell("mkdir -p Cluster_logs/samtools_sort_post_realign")
-    shell("mkdir -p Cluster_logs/samtools_sortbynames_post_realign")
-    shell("mkdir -p Cluster_logs/samtools_fixmate_post_realign")
     shell("mkdir -p Cluster_logs/indelrealigner")
-    shell("mkdir -p Cluster_logs/awk_intervals_for_IGV")
     shell("mkdir -p Cluster_logs/realignertargetcreator")
-    shell("mkdir -p Cluster_logs/samtools_indel_indexing")
-    shell("mkdir -p Cluster_logs/lofreq_indel_qualities")
-    shell("mkdir -p Cluster_logs/bedtools_masking")
-    shell("mkdir -p Cluster_logs/bedtools_merged_mask")
-    shell("mkdir -p Cluster_logs/awk_mincovfilt")
-    shell("mkdir -p Cluster_logs/awk_coverage_stats")
-    shell("mkdir -p Cluster_logs/bedtools_genome_coverage")
-    shell("mkdir -p Cluster_logs/samtools_index_markdup")
-    shell("mkdir -p Cluster_logs/samtools_markdup")
-    shell("mkdir -p Cluster_logs/samtools_calmd")
-    shell("mkdir -p Cluster_logs/samtools_sorting")
-    shell("mkdir -p Cluster_logs/samtools_fixmate")
-    shell("mkdir -p Cluster_logs/samtools_sortbynames")
     shell("mkdir -p Cluster_logs/bwa_mapping")
     shell("mkdir -p Cluster_logs/bowtie2_mapping")
-    shell("mkdir -p Cluster_logs/sickle_trim_quality")
-    shell("mkdir -p Cluster_logs/cutadapt_adapters_removing")
-    shell("mkdir -p Cluster_logs/fastqscreen_contamination_checking")
-    shell("mkdir -p Cluster_logs/fastqc_quality_control")
-    shell("mkdir -p Cluster_logs/multiqc_reports_aggregation")
 
-#################### A L L ###################################################
+############################# O N S U C C E S S ##############################
+onsuccess:
+    shutil.rmtree(".snakemake")
+
+################################## A L L #####################################
 rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
-        validatesam = expand("results/05_Validation/validatesamfile/{sample}_{aligner}_validate_sam.txt",
-                            sample= SAMPLE, aligner = ALIGNER),
-        check = expand("results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        stats = expand("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.txt",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),        
-        igv_output = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        realigned_fixed_bam = expand("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        indelqual = expand("results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV),
-        covstats = expand("results/03_Coverage/{sample}_{aligner}_{mincov}X_coverage-stats.tsv",
-                            sample = SAMPLE, aligner = ALIGNER, mincov = MINCOV)
+        callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
+        stats = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_stats.txt",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),        
+        igv_output = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_realignertargetcreator.bed",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
+        realigned_fixed_bam = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
+        indelqual = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bam",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
+        covstats = expand("results/03_Coverage/{sample}_{aligner}_{markdup}_{mincov}X_coverage-stats.tsv",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
+        markduplicate = expand("results/02_Mapping/{sample}_{aligner}_{markdup}-mark-dup.bam",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP)
 
-###############################################################################
+################################ R U L E S ####################################
 rule callable_loci:
     # Aim: Collects statistics on callable, uncallable, poorly mapped, and other parts of the genome.
     # A very common question about a NGS set of reads is what areas of the genome are considered callable. This tool
@@ -170,14 +146,15 @@ rule callable_loci:
         GATK
     input:
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        sort = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam"
+        sort = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
+        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai",
     output:
-        call = "results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
-        summary = "results/05_Validation/callableloci/{sample}_{aligner}_{mincov}X_summary_table.txt"
+        call = "results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
+        summary = "results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_summary_table.txt"
     threads: 
         CPUS
     log :
-        "results/11_reports/callableloci/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_callable_status.log"
+        "results/11_reports/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.log"
     shell:
         "gatk3 -T CallableLoci -R {input.refpath} -I {input.sort} -summary {output.summary} -o {output.call}" #  > {log} 2>&1
 
@@ -186,23 +163,22 @@ rule validate_sam:
     # Aim: Basic check for bam file validity, as interpreted by the Broad Institute.
     # Use: picard.jar ValidateSamFile \
     #      -I input.bam \
-    #      - MODE SUMMARY
+    #      -MODE SUMMARY
     message:
         "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
     conda:
         PICARD
     input:
-        sorted = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
-        index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai",
+        sorted = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
+        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai",
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
     output:
-        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt"
+        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt"
+    threads: CPUS
     log:
-        "results/11_Reports/validatesamfiles/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
+        "results/11_Reports/validatesamfiles/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
     shell:
-        """
-        picard ValidateSamFile -I {input.sorted} -R {input.refpath} -O {output.check} -MODE VERBOSE
-        """
+        "scripts/validatesamfile.sh"
 
 ###############################################################################
 rule samtools_stats:
@@ -215,12 +191,12 @@ rule samtools_stats:
     resources:
        cpus = CPUS
     input:
-        bam = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam",
+        bam = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta"
     output:
-        stats = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.txt"
+        stats = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_stats.txt"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted_stats.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_stats.log"
     shell:
         """
         samtools stats --threads {resources.cpus} -r {input.refpath} {input.bam} 1> {output.stats} 2> {log}
@@ -237,11 +213,11 @@ rule samtools_index_post_realign:
     resources:
        cpus = CPUS
     input:
-        sortedbam = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam"
+        sortedbam = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam"
     output:
-        index = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bai"
+        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted-index.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted-index.log"
     threads: 
         CPUS
     shell:
@@ -263,22 +239,20 @@ rule samtools_sort_post_realign:
     params:
         tmpdir = TMPDIR
     input:
-        fixmate = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate.bam"
+        fixmate = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate.bam"
     output:
-        sorted = "results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.bam"
+        sorted = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_fix-mate_sorted.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.log"
     shell:
-        """
-        samtools sort 
-        --threads {resources.cpus} 
-        -m {resources.mem_gb}G 
-        -T {params.tmpdir} 
-        --output-fmt BAM 
-        -o {output.sorted} 
-        {input.fixmate} 
-        &> {log}
-        """
+        "samtools sort "
+        "--threads {resources.cpus} "
+        "-m {resources.mem_gb}G "
+        "-T {params.tmpdir} "
+        "--output-fmt BAM "
+        "-o {output.sorted} " 
+        "{input.fixmate} "
+        "&> {log}"
 
 ###############################################################################
 rule samtools_fixmate_post_realign:
@@ -291,11 +265,11 @@ rule samtools_fixmate_post_realign:
     resources:
         cpus = CPUS
     input:
-        realignedbynames = "results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign_sort-by-names.bam"
+        realignedbynames = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_sort-by-names.bam"
     output:
-        fixmate = temp("results/05_Validation/{sample}_{aligner}_{mincov}X_realign_fix-mate.bam")
+        fixmate = temp("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate.bam")
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_fixmate.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_fixmate.log"
     shell:
         """
         samtools fixmate --threads {resources.cpus} -m --output-fmt BAM {input.realignedbynames} {output.fixmate} &> {log} 
@@ -313,11 +287,11 @@ rule samtools_sortbynames_post_realign:
         cpus = CPUS,
         mem_gb = MEM_GB
     input:
-        realigned_bam = "results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign.bam",
+        realigned_bam = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign.bam",
     output:
-        realignedbynames = temp("results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign_sort-by-names.bam")
+        realignedbynames = temp("results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_sort-by-names.bam")
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_realign_sort-by-names.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_sort-by-names.log"
     shell:
         """
         samtools sort --threads {resources.cpus} -m {resources.mem_gb}G -n --output-fmt BAM -o {output.realignedbynames} {input.realigned_bam} &> {log}
@@ -329,41 +303,36 @@ rule indelrealigner:
     #       IndelRealigner takes a coordinate-sorted and indexed BAM and a target intervals file generated by RealignerTargetCreator. 
     #       IndelRealigner then performs local realignment on reads coincident with the target intervals using consenses 
     #       from indels present in the original alignment.
-    # Use:  java -Xmx8G -Djava.io.tmpdir=/tmp -jar GenomeAnalysisTK.jar \
+    # Use:  java -Xmx16G -Djava.io.tmpdir=/tmp -jar GenomeAnalysisTK.jar \
     #       -T IndelRealigner \
     #       -R human_g1k_v37_decoy.fasta \
     #       -targetIntervals realignertargetcreator.intervals \
     #       -known INDEL_chr10_1Mb_b37_1000G_phase3_v4_20130502.vcf \ 
     #       -I 7156_snippet.bam \
-    #       -o 7156_snippet_indelrealigner.bam
-    #      
+    #       -o 7156_snippet_indelrealigner.bam     
     message:
         "Awk IGV intervals visualization for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
-    conda:
-        GATK
     input:
-        bam = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",
-        reference = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        target_intervals = "results/04_Variants/{sample}_{aligner}_{mincov}X.intervals"
+        bam="results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bam",
+        bai="results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bai",
+        ref="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        fai="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta.fai",
+        dict="resources/genomes/GCA_018104305.1_AalbF3_genomic.dict",
+        target_intervals="results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X.intervals"
     output:
-        realigned_bam = temp("results/05_Validation/realigned/{sample}_{aligner}_{mincov}X_realign.bam"), 
+        bam="results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign.bam",
+        bai="results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign.bai",
     benchmark:
-        "benchmarks/indelrealigner/{sample}_{aligner}_{mincov}X_indel-qual.tsv"   
+        "benchmarks/indelrealigner/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.tsv",
     log:
-        "results/11_Reports/indelrealigner/{sample}_{aligner}_{mincov}X.log"
-    threads: 
-        CPUS
+        "results/11_Reports/indelrealigner/{sample}_{aligner}_{markdup}_{mincov}X.log",
+    params:
+        extra="--defaultBaseQualities 20 --filter_reads_with_N_cigar",  # optional
+    threads: CPUS
     resources:
-        mem_gb = MEM_GB
-    shell:
-        """
-        gatk3 -T IndelRealigner 
-        -R {input.reference} 
-        -targetIntervals {input.target_intervals} 
-        -I {input.bam} 
-        -o {output.realigned_bam} 
-        &> {log}
-        """
+        mem_mb=16000,
+    wrapper:
+        "v1.19.1/bio/gatk3/indelrealigner"
 
 ###############################################################################
 rule awk_intervals_for_IGV:
@@ -375,13 +344,13 @@ rule awk_intervals_for_IGV:
     conda:
         GAWK
     input:
-        intervals="results/04_Variants/{sample}_{aligner}_{mincov}X.intervals"
+        intervals="results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X.intervals"
     params:
         cmd = r"""'BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}'"""
     output:
-        bed = "results/04_Variants/{sample}_{aligner}_{mincov}X_realignertargetcreator.bed"
+        bed = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_realignertargetcreator.bed"
     log:
-        "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_min-cov-filt.log"
+        "results/11_Reports/awk/{sample}_{aligner}_{markdup}_{mincov}X_min-cov-filt.log"
     threads: 
         CPUS
     shell:
@@ -403,30 +372,25 @@ rule realignertargetcreator:
     #           -o 7156_realignertargetcreator.intervals
     message:
         "RealignerTargetCreator creates a target intervals file for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
-    conda:
-        GATK
     input:
-        reference = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        bam = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam",
-        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bai"
+        bam="results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bam",
+        bai="results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bai",
+        ref="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        fai="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta.fai",
+        dict="resources/genomes/GCA_018104305.1_AalbF3_genomic.dict",
     output:
-        intervals = temp("results/04_Variants/{sample}_{aligner}_{mincov}X.intervals")
+        intervals=temp("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X.intervals"),
     benchmark:
-        "benchmarks/realignertargetcreator/{sample}_{aligner}_{mincov}X.tsv"
+        "benchmarks/realignertargetcreator/{sample}_{aligner}_{markdup}_{mincov}X.tsv"
     log:
-        "results/11_Reports/realignertargetcreator/{sample}_{aligner}_{mincov}X.log"
+        "results/11_Reports/realignertargetcreator/{sample}_{aligner}_{markdup}_{mincov}X.log",
+    params:
+        extra="--defaultBaseQualities 20 --filter_reads_with_N_cigar",  # optional
     resources:
-        mem_gb = MEM_GB
-    threads: 
-        CPUS
-    shell:
-        """
-        gatk3 -T RealignerTargetCreator 
-        -R {input.reference} 
-        -I {input.bam} 
-        -o {output.intervals} 
-        &> {log}
-        """
+        mem_mb=16000,
+    threads: CPUS
+    wrapper:
+        "v1.19.1/bio/gatk3/realignertargetcreator"
 
 ###############################################################################
 rule samtools_indel_indexing:
@@ -439,11 +403,11 @@ rule samtools_indel_indexing:
     resources:
        cpus = CPUS
     input:
-        indelqual = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam"
+        indelqual = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bam"
     output:
-        index = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bai"
+        index = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bai"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{mincov}X_indel-qual-index.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual-index.log"
     threads: 
         CPUS
     shell:
@@ -462,12 +426,12 @@ rule lofreq_indel_qualities:
     conda:
         LOFREQ
     input:
-        maskedref = "results/04_Variants/{sample}_{aligner}_{mincov}X_masked-ref.fasta",
-        markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam"
+        maskedref = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_masked-ref.fasta",
+        markdup = "results/02_Mapping/{sample}_{aligner}_{markdup}-mark-dup.bam"
     output:
-        indelqual = "results/04_Variants/{sample}_{aligner}_{mincov}X_indel-qual.bam"
+        indelqual = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bam"
     log:
-        "results/11_Reports/lofreq/{sample}_{aligner}_{mincov}X_indel-qual.log"
+        "results/11_Reports/lofreq/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.log"
     threads: 
         CPUS
     shell:
@@ -486,11 +450,11 @@ rule bedtools_masking:
     params:
         path = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta"
     input:
-        lowcovmask = "results/03_Coverage/{sample}_{aligner}_{mincov}X_low-cov-mask.bed"
+        lowcovmask = "results/03_Coverage/{sample}_{aligner}_{markdup}_{mincov}X_low-cov-mask.bed"
     output:
-        maskedref = "results/04_Variants/{sample}_{aligner}_{mincov}X_masked-ref.fasta"
+        maskedref = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_masked-ref.fasta"
     log:
-        "results/11_Reports/bedtools/{sample}_{aligner}_{mincov}X_masking.log"
+        "results/11_Reports/bedtools/{sample}_{aligner}_{markdup}_{mincov}X_masking.log"
     threads: 
         CPUS
     shell:
@@ -507,11 +471,11 @@ rule bedtools_merged_mask:
     conda:
         BEDTOOLS
     input:
-        mincovfilt = "results/03_Coverage/{sample}_{aligner}_{mincov}X_min-cov-filt.bed"
+        mincovfilt = "results/03_Coverage/{sample}_{aligner}_{markdup}_{mincov}X_min-cov-filt.bed"
     output:
-        lowcovmask = temp("results/03_Coverage/{sample}_{aligner}_{mincov}X_low-cov-mask.bed")
+        lowcovmask = temp("results/03_Coverage/{sample}_{aligner}_{markdup}_{mincov}X_low-cov-mask.bed")
     log:
-        "results/11_Reports/bedtools/{sample}_{aligner}_{mincov}X_merging.log"
+        "results/11_Reports/bedtools/{sample}_{aligner}_{markdup}_{mincov}X_merging.log"
     threads: 
         CPUS
     shell:
@@ -530,11 +494,11 @@ rule awk_mincovfilt:
     params:
         mincov = MINCOV
     input:
-        genomecov = "results/03_Coverage/{sample}_{aligner}_genome-cov.bed"
+        genomecov = "results/03_Coverage/{sample}_{aligner}_{markdup}-genome-cov.bed"
     output:
-        mincovfilt = temp("results/03_Coverage/{sample}_{aligner}_{mincov}X_min-cov-filt.bed")
+        mincovfilt = temp("results/03_Coverage/{sample}_{aligner}_{markdup}_{mincov}X_min-cov-filt.bed")
     log:
-        "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_min-cov-filt.log"
+        "results/11_Reports/awk/{sample}_{aligner}_{markdup}_{mincov}X_min-cov-filt.log"
     threads: 
         CPUS
     shell:
@@ -555,11 +519,11 @@ rule awk_coverage_stats:
     params:
         mincov = MINCOV
     input:
-        genomecov = "results/03_Coverage/{sample}_{aligner}_genome-cov.bed"
+        genomecov = "results/03_Coverage/{sample}_{aligner}_{markdup}-genome-cov.bed"
     output:
-        covstats = "results/03_Coverage/{sample}_{aligner}_{mincov}X_coverage-stats.tsv"
+        covstats = "results/03_Coverage/{sample}_{aligner}_{markdup}_{mincov}X_coverage-stats.tsv"
     log:
-        "results/11_Reports/awk/{sample}_{aligner}_{mincov}X_coverage-stats.log"
+        "results/11_Reports/awk/{sample}_{aligner}_{markdup}_{mincov}X_coverage-stats.log"
     threads: 
         CPUS
     shell:
@@ -594,12 +558,12 @@ rule bedtools_genome_coverage:
     conda:
         BEDTOOLS
     input:
-        markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam",
-        index = "results/02_Mapping/{sample}_{aligner}_mark-dup.bai"
+        markdup = "results/02_Mapping/{sample}_{aligner}_{markdup}-mark-dup.bam",
+        index = "results/02_Mapping/{sample}_{aligner}_{markdup}-mark-dup.bai"
     output:
-        genomecov = temp("results/03_Coverage/{sample}_{aligner}_genome-cov.bed")
+        genomecov = temp("results/03_Coverage/{sample}_{aligner}_{markdup}-genome-cov.bed")
     log:
-        "results/11_Reports/bedtools/{sample}_{aligner}_genome-cov.log"
+        "results/11_Reports/bedtools/{sample}_{aligner}_{markdup}-genome-cov.log"
     shell:
         """
         bedtools genomecov -bga -ibam {input.markdup} 1> {output.genomecov} 2> {log}
@@ -616,11 +580,11 @@ rule samtools_index_markdup:
     resources:
        cpus = CPUS
     input:
-        markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam"
+        markdup = "results/02_Mapping/{sample}_{aligner}_{markdup}-mark-dup.bam"
     output:
-        index = "results/02_Mapping/{sample}_{aligner}_mark-dup.bai"
+        index = "results/02_Mapping/{sample}_{aligner}_{markdup}-mark-dup.bai"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_mark-dup-index.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}-mark-dup-index.log"
     shell:
         "samtools index "     # Samtools index, tools for alignments in the SAM format with command to index alignment
         "-@ {resources.cpus} " # --threads: Number of additional threads to use (default: 1)
@@ -629,27 +593,27 @@ rule samtools_index_markdup:
         "{output.index} "      # Markdup index output
         "&> {log}"             # Log redirection
 
+
 ###############################################################################
-rule validate_sam_markdup:
-    # Aim: Basic check for bam file validity, as interpreted by the Broad Institute.
-    # Use: picard.jar ValidateSamFile \
-    #      -I input.bam \
-    #      -MODE VERBOSE
-    message:
-        "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
-    conda:
-        PICARD
+rule mark_duplicates_spark:
     input:
-        markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam",
-        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        calmd = "results/02_Mapping/{sample}_{aligner}_sorted_MD.bam",
     output:
-        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_validate_sam.txt"
+        bam = "results/02_Mapping/{sample}_{aligner}_picard-mark-dup.bam",
+        metrics="results/02_Mapping/{sample}_{aligner}_picard-markdup_metrics.txt",
     log:
-        "results/11_Reports/validatesamfiles/{sample}_{aligner}_validate_bam_markdup.log"
-    shell:
-        """
-        picard ValidateSamFile -I {input.markdup} -R {input.refpath} -O {output.check} -MODE VERBOSE
-        """
+        "results/11_Reports/samtools/{sample}_{aligner}_picard-mark-dup.log",
+    params:
+        extra="--remove-sequencing-duplicates",  # optional
+        java_opts="",  # optional
+        #spark_runner="",  # optional, local by default
+        #spark_v1.19.1="",  # optional
+        #spark_extra="", # optional
+    resources:
+        mem_mb=16000,
+    threads: CPUS
+    wrapper:
+        "v1.19.1/bio/gatk/markduplicatesspark"
 
 ###############################################################################
 rule samtools_markdup:
@@ -664,9 +628,9 @@ rule samtools_markdup:
     input:
         calmd = "results/02_Mapping/{sample}_{aligner}_sorted_MD.bam"
     output:
-        markdup = "results/02_Mapping/{sample}_{aligner}_mark-dup.bam"
+        markdup = "results/02_Mapping/{sample}_{aligner}_samtools-mark-dup.bam"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_mark-dup.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_samtools-mark-dup.log"
     shell:
         "samtools markdup "          # Samtools markdup, tools for alignments in the SAM format with command mark duplicates
         "--threads {resources.cpus} " # -@: Number of additional threads to use (default: 1)
@@ -789,28 +753,6 @@ rule samtools_sortbynames:
         "&> {log}"                     # Log redirection
 
 ###############################################################################
-rule validate_sam_bwa:
-    # Aim: Basic check for bam file validity, as interpreted by the Broad Institute.
-    # Use: picard.jar ValidateSamFile \
-    #      -I input.bam \
-    #      - MODE SUMMARY
-    message:
-        "Picard ValidateSamFile for {wildcards.sample} sample ({wildcards.aligner})"
-    conda:
-        PICARD
-    input:
-        sam = "results/02_Mapping/{sample}_bwa-mapped.sam",
-        refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-    output:
-        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_validate_sam.txt"
-    log:
-        "results/11_Reports/validatesamfiles/{sample}_{aligner}_validate_sam.log"
-    shell:
-        """
-        picard ValidateSamFile -I {input.sam} -R {input.refpath} -O {output.check} -MODE VERBOSE
-        """
-
-###############################################################################
 rule bwa_mapping:
     # Aim: reads mapping against reference sequence
     # Use: bwa mem -t [THREADS] -x [REFERENCE] [FWD_R1.fq] [REV_R2.fq] 1> [MAPPED.sam]
@@ -828,7 +770,7 @@ rule bwa_mapping:
         fwdreads = "results/01_Trimming/sickle/{sample}_sickle-trimmed_R1.fastq.gz",
         revreads = "results/01_Trimming/sickle/{sample}_sickle-trimmed_R2.fastq.gz"
     output:
-        mapped = temp("results/02_Mapping/{sample}_bwa-mapped.sam")
+        mapped = "results/02_Mapping/{sample}_bwa-mapped.sam"
     benchmark:
         "benchmarks/bwa/{sample}.tsv"
     log:

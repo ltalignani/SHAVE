@@ -3514,8 +3514,8 @@
         "results/00_Quality_Control/fastqc",
         "results/00_Quality_Control/fastq-screen"
     ],
-    "config_creation_date": "2022-11-14, 08:18",
-    "config_git_hash": "710c3641c417046c4616a26a419009f1c28cae50",
+    "config_creation_date": "2022-11-18, 20:32",
+    "config_git_hash": "944d3baa79f82a5d420833bf4ccea238112bce43",
     "config_intro_text": null,
     "config_report_comment": null,
     "config_report_header_info": null,
@@ -3523,5 +3523,5 @@
     "config_short_version": "1.12",
     "config_subtitle": null,
     "config_title": null,
-    "config_version": "1.12 (710c364)"
+    "config_version": "1.12 (944d3ba)"
 }

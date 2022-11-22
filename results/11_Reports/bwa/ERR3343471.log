@@ -18,4 +18,4 @@
 [M::mem_pestat] skip orientation RR
 [main] Version: 0.7.17-r1188
 [main] CMD: bwa mem -M -T 0 -t 10 -v 1 -R @RG\tID:ERR3343471\tSM:ERR3343471 resources/indexes/bwa/GCA_018104305.1_AalbF3_genomic.fasta results/01_Trimming/sickle/ERR3343471_sickle-trimmed_R1.fastq.gz results/01_Trimming/sickle/ERR3343471_sickle-trimmed_R2.fastq.gz
-[main] Real time: 22.571 sec; CPU: 187.130 sec
+[main] Real time: 20.537 sec; CPU: 183.774 sec

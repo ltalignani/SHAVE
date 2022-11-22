@@ -59,6 +59,12 @@ aligner: "bwa" # Select your favorite aligner (default: 'bwa')
 ## 'bwa'     # Faster (default)
 ## 'bowtie2' # Slower, 'sensitivity' requiried and should be set (see below "Bowtie2" options)
 
+### MARKDUPLICATE PROGRAM ----------------------------------------------------------------------------
+markdup: "picard" # # Select your favorite Mark Duplicate Program (default: 'picard')
+## Available options:
+## 'picard'     # Picard MarkDuplicateSpark (default)
+## 'samtools'   # samtools markdup
+
 ### CONSENSUS ----------------------------------------------------------------------------------------
 consensus:
   reference: "GCA_018104305.1_AalbF3_genomic.fasta" # Your reference, in fasta format
