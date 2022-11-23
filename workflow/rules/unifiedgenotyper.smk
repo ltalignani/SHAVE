@@ -210,7 +210,7 @@ rule hard_filter_calls:
     conda:
         GATK4
     input:
-        ref=REFPATH,
+        ref="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
         vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf",
     output:
         vcf="results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf",

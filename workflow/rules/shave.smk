@@ -107,6 +107,8 @@ rule all:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        hard_filter = expand("results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         vcf = expand("results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
@@ -127,6 +129,37 @@ rule all:
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP)
 
 ################################ R U L E S ####################################
+rule hard_filter_calls:
+    # Aim: Filter variant calls based on INFO and/or FORMAT annotations.
+    # Use: gatk VariantFiltration \
+    # -R reference.fasta \
+    # -V input.vcf.gz \
+    # -O output.vcf.gz
+    # --filter-name "my_filter1" \
+    # --filter-expression "AB < 0.2" \
+    # --filter-name "my_filter2" \
+    # --filter-expression "MQ0 > 50"
+    message:
+        "VariantFiltration Hard-filtering for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
+    conda:
+        GATK4
+    input:
+        ref="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf",
+    output:
+        vcf="results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf",
+    params:
+        filters={"myfilter": "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"},
+        extra="",
+        java_opts="",
+    resources:
+        mem_gb=MEM_GB
+    log:
+        "results/11_Reports/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.log",
+    wrapper:
+        "0.74.0/bio/gatk/variantfiltration"
+
+###############################################################################
 rule unifiedgenotyper:
     # Aim:  Call variants in sequence data. The following parameters comes from the MalariaGEN
     # Use:  java -jar GenomeAnalysisTK.jar \ 
