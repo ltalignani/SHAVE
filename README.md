@@ -19,13 +19,11 @@ SHAVE is a bioinformatic pipeline used for mosquitoes (*Aedes / Anopheles*) geno
 
 In brief, SHAVE remove adatpers, report quality reads, aligns reads to a reference genome, fix incorrect mates, mark duplicates, add indel qualities to BAM files, validate BAM files according to SAM/BAM specifications. 
 
-However, unlike SHAVE which uses HaplotypeCaller to call variants and obtain genotype likelihoods, SHAVE has been created to respect the parameters of the MalariaGEN WDL pipelines, in order to be able to call variants and genotypes under the same conditions they may have used. That's why SHAVE uses GATK's RealignerTargetCreator, IndelRealigner and SAMtools fixmate after realignment. A second pipeline nammed UnifiedGenotyper is used to call variants and Genotypes as made by the MalariaGEN. 
-
-UnifiedGenotyper is used away from SHAVE because of a still unresolved bug caused by this program under snakemake. For this reason, it is part of a second pipeline named after it, in charge of calling variants and genotypes, performing hard-filtering according to a user-defined parameterization, compressing the resulting VCF and extracting a consensus sequence in .fasta format **AFTER running SHAVE and only after it as finished**. SHAVE generates all the files needed for UnifiedGenotyper to work properly, so you have to wait until SHAVE has finished.
+However, unlike SHAVE which uses HaplotypeCaller to call variants and obtain genotype likelihoods, SHAVE has been created to respect the parameters of the MalariaGEN WDL pipelines, in order to be able to call variants and genotypes under the same conditions the MalariaGEN may have used. That's why SHAVE uses GATK's RealignerTargetCreator, IndelRealigner and UnifiedGenotyper to call variants and Genotypes as made by the MalariaGEN. 
 
 If you want to use a more modern way of calling variants, use [**SHAVE2**](https://github.com/ltalignani/SHAVE2). 
 
-If you want to compare your results to those obtained by MalariaGEN, you are in the right place: these pipelines are made for you.
+If you want to compare your results to those obtained by MalariaGEN, you are in the right place: this pipeline is made for you.
 
 **Note about BQSR and VQSR :**
 
@@ -53,13 +51,13 @@ Written for **MOVE-ADAPT** project.
 - index Indels,
 - realign Indels,
 - Sort by queryname,
-- Fix mates,
+- Fill-in mate coordinates,
 - Sort by coordinates,
-
-**UnifiedGenotyper pipeline:** 
-
+- Fix mates information,
 - Index realigned bam,
-- Variants calling (_vcf files_),
+- Stats on bam,
+- Collects stats on callable, uncallable, poorly mapped and other parts of the genome,
+- Variant calling (_vcf files_),
 - Genotyping, 
 - Variant filtering,
 - VCF compression,
@@ -67,14 +65,11 @@ Written for **MOVE-ADAPT** project.
 - View intervals in IGV,
 
 ### Version ###
-*V1.2022.10.05*  
+*V1.2022.11.23*  
 
 ### Directed Acyclic Graphs ###
-**SHAVE:**
-<img src="./visuals/shave_dag.png" width="200" height="400">
 
-**UnifiedGenotyper:**
-<img src="./visuals/UnifiedGenotyper_dag.png" width="200" height="400">
+<img src="./visuals/shave_dag.png" width="200" height="400">
 
 ## ~ INSTALLATIONS ~ ##
 
@@ -115,7 +110,7 @@ conda activate myenv_x86
 conda config --env --set subdir osx-64
 ```
 
-# SHAVE + UnifiedGenotyper pipelines #
+# SHAVE with UnifiedGenotyper pipeline #
 Clone _(HTTPS)_ the [SHAVE](https://github.com/ltalignani/SHAVE) repository on github:
 
 ```shell
@@ -189,8 +184,10 @@ This is the main results :
 ### 02_Mapping ###
 | File | Object |
 |:--- | :--- |
-| **markdup.bam** | read alignments, MD/NM tagged in _bam_ format _(can be visualized in, i.e. IGV)_ |
-| **markdup.bai** | bam indexes _bai_ use in i.e. IGV with _./resources/genomes/AalbF3.fasta_ |
+| **mark-dup.bam** | read alignments, MD/NM tagged in _bam_ format _(can be visualized in, i.e. IGV)_ |
+| **mark-dup.bam.bai** | bam indexes _bai_ use in i.e. IGV with _./resources/genomes/AalbF3.fasta_ |
+| **mark-dup.bam.sbi** | bam splitting index (needed by Spark for Picard MarkDuplicates |
+| **markdup_metrics.txt** | bam metrics created by Picard MarkDuplicates |
 | _mapped.sam_ | (default config: tempdir, removed, save disk usage)_ |
 | _sortbynames.bam_ | (default config: tempdir, removed, save disk usage)_ |
 | _fixmate.bam_ | (default config: tempdir, removed, save disk usage)_ |
@@ -209,11 +206,8 @@ This is the main results :
 | **maskedref.fasta.fai** | reference sequence indexes, masked for low coverages regions, in _fai_ format |
 | **indelqual.bam** | read alignments with indel qualities, in _bam_ format _(can be visualized in, i.e. IGV)_ |
 | **indelqual.bai** | bam indexes _bai_ use in i.e. IGV with _./results/04_Variants/maskedref.fasta_ |
-|  |  |
-| **realignedtargetcreator** directory: |  |
-| **.intervals** | RealignerTargetCreator intervals file for IndelRealigner, in _intervals_ format |
-|  |  |
-| **unifiedgenotyper** directory: |  |
+| _.intervals_ | (default config: tempdir, removed, save disk usage)_ |
+| **realignertargetcreator.bed** | local alignment intervals in _bed_ format. Use in i.e. IGV with _./resources/genomes/AalbF3.fasta_ |
 | **variantcall.vcf** | SNVs and Indels calling in _vcf_ format |
 | **variantfilt.vcf** | SNVs and Indels passing filters, in _vcf_ format |
 | **variantfilt.vcf.gz** | SNVs and Indels passing filters archive, in _vcf.bgz_ format |
@@ -222,7 +216,7 @@ This is the main results :
 ### 05_Validation ###
 | File | Object |
 |:--- | :--- |
-| **mark-dup.txt** | statistics of all reads, produced by samtools stats, in _txt_ format |
+| **sorted_stats.txt** | statistics of all reads, produced by samtools stats, in _txt_ format |
 | **realign_fix-mate_sorted.bam** | realigned, fix-mate sorted bam, in _bam_ format |
 | **realign_fix-mate_sorted.bai** | index of realigned, fix-mate sorted bam, in_bam_ format |
 |  |  |
@@ -231,6 +225,7 @@ This is the main results :
 | **summary_table** | summary table produced by GATK's CallableLoci, in _txt_ format |
 |  |  |
 | **realigned** directory: |  |
+| **realign.bam** | bam in _bam_ format |
 | **realign.bai** | bam indexes in _bai_ format |
 
  
@@ -256,7 +251,7 @@ If you want see or edit default settings in **config.yaml** file in **./config/*
 Edit to match your hardware configuration  
 - **cpus**: for tools that can _(i.e. bwa)_ could be use at most n cpus to run in parallel _(default config: '8')_  **Note**: snakemake (if launch with default bash script) will always use all cpus to parallelize jobs.
 - **mem_gb**: for tools that can _(i.e. samtools)_ limit its use of memory to max n Gb _(default config: '16' Gb)_. 
-- **tmpdir**: for tools that can _(i.e. pangolin)_ specify where you want the temp stuff _(default config: '$TMPDIR')_
+- **tmpdir**: for tools that can _(i.e. picard)_ specify where you want the temp stuff _(default config: '$TMPDIR')_
 
 ### Environments ###
 Edit if you change some environments _(i.e. new version)_ in ./workflow/envs/tools-version.yaml files
@@ -267,6 +262,14 @@ To select one or both, de/comment (#) as you wish:
 
 - **bwa**: faster _(default config)_
 - **bowtie2**: slower, sensitivity requiried could be set _(see below "Bowtie2" options)_
+
+### Mark Duplicates program ###
+You can choose to mark duplicates using either **Samtools** or **Picard**  
+To select one, write the name of the selected program just after the "markdup" variable:
+
+- **picard**: works perfectly with GATK's programs. Can remove duplicates if needed _(default config)_
+- **samtools**: uses way less memory.
+
 
 ### Consensus ###
 - **reference**: reference sequence path used for genome mapping _(default config: 'AalbF3')_

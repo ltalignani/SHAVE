@@ -5,9 +5,9 @@
 # Aim:                  Snakefile for SHort-read Alignment pipeline for VEctor 
 # Date:                 2022.10.05
 # Run:                  snakemake --snakefile shave.smk --cores X --use-conda
-# Latest modification:  2022.10.07
+# Latest modification:  2022.11.23
 # Done:                 Added RealignerTargetCreator, IndelRealigner, 
-#                       UnifiedGenotyper
+#                       UnifiedGenotyper, VariantFiltration, compression and tabix
 
 ###############################################################################
 # PUBLICATIONS #
@@ -944,7 +944,7 @@ rule bwa_mapping:
         fwdreads = "results/01_Trimming/sickle/{sample}_sickle-trimmed_R1.fastq.gz",
         revreads = "results/01_Trimming/sickle/{sample}_sickle-trimmed_R2.fastq.gz"
     output:
-        mapped = "results/02_Mapping/{sample}_bwa-mapped.sam"
+        mapped = temp("results/02_Mapping/{sample}_bwa-mapped.sam")
     benchmark:
         "benchmarks/bwa/{sample}.tsv"
     log:
