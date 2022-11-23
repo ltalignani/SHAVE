@@ -107,11 +107,15 @@ rule all:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        vcf = expand("results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         stats = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_stats.txt",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),        
         igv_output = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_realignertargetcreator.bed",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
+        index_post_realign = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         realigned_fixed_bam = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
@@ -123,6 +127,65 @@ rule all:
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP)
 
 ################################ R U L E S ####################################
+rule unifiedgenotyper:
+    # Aim:  Call variants in sequence data. The following parameters comes from the MalariaGEN
+    # Use:  java -jar GenomeAnalysisTK.jar \ 
+    #       -T UnifiedGenotyper \
+    #       -nct {threads.cpus} \ # -nt / --num_threads controls the number of data threads sent to the processor 
+    #       -I {sample BAM} \
+    #       --alleles {alleles VCF} \ : This option has been removed for the moment.  Alleles against which to genotype (VCF format). Given the sites VCF file is fixed for every sample, and we wish to generalise to future sets of sites/alleles, the VCF file describing sites and alleles should be considered a parameter. This file for A. gambiae (AgamP4) is available at
+    #       -R {reference sequence} \
+    #       --out {output VCF} \
+    message:
+        "UnifiedGenotyper calling SNVs for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
+    conda:
+        GATK
+    input:
+        bam = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam",
+        ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        index = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bai"
+        #alleles = ALLELES
+    output:
+        vcf="results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf"
+    log:
+        "results/11_Reports/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X.log"
+    benchmark:
+        "benchmarks/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X.tsv"
+    threads: CPUS
+    shell:
+        "gatk3 -T UnifiedGenotyper "                    # Genome Analysis Tool Kit - Broad Institute UnifiedGenotyper
+        "-nct {threads} "                          # -nct / --num_cpu_threads_per_data_thread controls the number of CPU threads allocated to each data thread
+        "-I {input.bam} "                               # Input indel realigned BAM file
+        "-R {input.ref} "                               # Reference sequence in fasta format
+        "--out {output.vcf} "                           # Output VCF
+        "--genotype_likelihoods_model BOTH "            # Genotype likelihoods calculation model to employ -- BOTH is the default option, while INDEL is also available for calling indels and SNP is available for calling SNPs only (SNP|INDEL|BOTH)
+        "--genotyping_mode GENOTYPE_GIVEN_ALLELES "     # Should we output confident genotypes (i.e. including ref calls) or just the variants? (DISCOVERY|GENOTYPE_GIVEN_ALLELES)
+        "--heterozygosity 0.015 "                       # Heterozygosity value used to compute prior likelihoods for any locus
+        "--heterozygosity_stdev 0.05 "                  # Standard deviation of heterozygosity for SNP and indel calling
+        "--indel_heterozygosity 0.001 "                 # Heterozygosity for indel calling
+        "--downsampling_type BY_SAMPLE "                # Type of reads downsampling to employ at a given locus. Reads will be selected randomly to be removed from thepile based on the method described here (NONE|ALL_READS| BY_SAMPLE) given locus
+        "-dcov 250 "                                    # downsampling coverage
+        "--output_mode EMIT_ALL_SITES "                 # Should we output confident genotypes (i.e. including ref calls) or just the variants? (EMIT_VARIANTS_ONLY|EMIT_ALL_CONFIDENT_SITES|EMIT_ALL_SITES)
+        "--min_base_quality_score 17 "                  # Minimum base quality required to consider a base for calling
+        "-stand_call_conf 0.0 "                         # standard min confidence-threshold for calling
+        "-contamination 0.0 "                           # Define the fraction of contamination in sequence data (for all samples) to aggressively remove.
+        "-A DepthPerAlleleBySample "                    # 
+        "-XA RMSMappingQuality "                        # 
+        "-XA Coverage "                                 #
+        "-XA ExcessHet "                                #
+        "-XA InbreedingCoeff "                          #
+        "-XA MappingQualityZero "                       #
+        "-XA HaplotypeScore "                           #
+        "-XA SpanningDeletions "                        #
+        "-XA FisherStrand "                             #
+        "-XA StrandOddsRatio "                          #
+        "-XA ChromosomeCounts "                         #
+        "-XA BaseQualityRankSumTest "                   #
+        "-XA MappingQualityRankSumTest "                #
+        "-XA QualByDepth "                              #
+        "-XA ReadPosRankSumTest "                       #
+
+###############################################################################
 rule callable_loci:
     # Aim: Collects statistics on callable, uncallable, poorly mapped, and other parts of the genome.
     # A very common question about a NGS set of reads is what areas of the genome are considered callable. This tool
@@ -134,6 +197,7 @@ rule callable_loci:
     # LOW_COVERAGE: There were fewer than min. depth bases at the locus, after applying filters
     # EXCESSIVE_COVERAGE: More than -maxDepth read at the locus, indicating some sort of mapping problem
     # POOR_MAPPING_QUALITY: More than --maxFractionOfReadsWithLowMAPQ at the locus, indicating a poor mapping quality of the reads
+    # Important : the bam file need to be indexed, and the index has to be in the same directory.
     # Use: gatk3 -T CallableLoci \
     #     -T CallableLoci \
     #     -R reference.fasta \
@@ -146,15 +210,15 @@ rule callable_loci:
         GATK
     input:
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        sort = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam",
-        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bai",
+        sort = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam",
+        index = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bai",
     output:
         call = "results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_callable_status.bed",
         summary = "results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_summary_table.txt"
     threads: 
         CPUS
     log :
-        "results/11_reports/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.log"
+        "results/11_reports/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_callable_status.log"
     shell:
         "gatk3 -T CallableLoci -R {input.refpath} -I {input.sort} -summary {output.summary} -o {output.call}" #  > {log} 2>&1
 
@@ -169,41 +233,16 @@ rule validate_sam:
     conda:
         PICARD
     input:
-        sorted = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
-        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai",
+        sorted = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam",
+        index = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bai",
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
     output:
-        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_validate_bam.txt"
+        check = "results/05_Validation/validatesamfile/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_validate_bam.txt"
     threads: CPUS
     log:
-        "results/11_Reports/validatesamfiles/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_validate_bam.log"
+        "results/11_Reports/validatesamfiles/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_validate_bam.log"
     shell:
         "scripts/validatesamfile.sh"
-
-###############################################################################
-rule fixmateinformation:
-    # Aim: This tool ensures that all mate-pair information is in sync between each read and its mate pair.
-    #      If no #OUTPUT file is supplied then the output is written to a temporary file and then copied over 
-    #      the #INPUT file (with the original placed in a .old file.)
-    # Use: picard.jar FixMateInformation \
-    #      -I input.bam \
-    #      -O fixed_mate.bam \
-    #      --ADD_MATE_CIGAR true
-    message:
-        "Picard FixMateInformation for {wildcards.sample} sample ({wildcards.aligner})"
-    conda:
-        PICARD
-    input:
-        sorted = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
-    output:
-        check = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam"
-    threads: CPUS
-    log:
-        "results/11_Reports/fixmateinformation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_validate_bam.log"
-    shell:
-        """
-        picard FixMateInformation -I {input.sorted} -O {output.check} --ADD_MATE_CIGAR true
-        """
 
 ###############################################################################
 rule samtools_stats:
@@ -216,12 +255,12 @@ rule samtools_stats:
     resources:
        cpus = CPUS
     input:
-        bam = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
+        bam = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam",
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta"
     output:
-        stats = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_stats.txt"
+        stats = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_stats.txt"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_stats.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_stats.log"
     shell:
         """
         samtools stats --threads {resources.cpus} -r {input.refpath} {input.bam} 1> {output.stats} 2> {log}
@@ -238,16 +277,41 @@ rule samtools_index_post_realign:
     resources:
        cpus = CPUS
     input:
-        sortedbam = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam"
+        sortedbam = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam"
     output:
-        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai"
+        index = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bai"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted-index.log"
+        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted-index.log"
     threads: 
         CPUS
     shell:
         """
         samtools index -@ {resources.cpus} -b {input.sortedbam} {output.index} &> {log}
+        """
+
+###############################################################################
+rule fixmateinformation:
+    # Aim: This tool ensures that all mate-pair information is in sync between each read and its mate pair.
+    #      If no #OUTPUT file is supplied then the output is written to a temporary file and then copied over 
+    #      the #INPUT file (with the original placed in a .old file.)
+    # Use: picard.jar FixMateInformation \
+    #      -I input.bam \
+    #      -O fixed_mate.bam \
+    #      --ADD_MATE_CIGAR true
+    message:
+        "Picard FixMateInformation for {wildcards.sample} sample ({wildcards.aligner})"
+    conda:
+        PICARD
+    input:
+        sorted = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
+    output:
+        check = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam"
+    threads: CPUS
+    log:
+        "results/11_Reports/fixmateinformation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_validate_bam.log"
+    shell:
+        """
+        picard FixMateInformation -I {input.sorted} -O {output.check} --ADD_MATE_CIGAR true
         """
 
 ###############################################################################
@@ -264,9 +328,9 @@ rule samtools_sort_post_realign:
     params:
         tmpdir = TMPDIR
     input:
-        fixmate = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate.bam"
+        fixmate = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate.bam"
     output:
-        sorted = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam"
+        sorted = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.log"
     shell:
@@ -292,7 +356,7 @@ rule samtools_fixmate_post_realign:
     input:
         realignedbynames = "results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_sort-by-names.bam"
     output:
-        fixmate = temp("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate.bam")
+        fixmate = temp("results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate.bam")
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_fixmate.log"
     shell:
@@ -657,18 +721,21 @@ rule samtools_markdup:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_samtools-mark-dup.log"
     shell:
-        "samtools markdup "          # Samtools markdup, tools for alignments in the SAM format with command mark duplicates
+        "samtools markdup "           # Samtools markdup, tools for alignments in the SAM format with command mark duplicates
         "--threads {resources.cpus} " # -@: Number of additional threads to use (default: 1)
         "-r "                         # -r: Remove duplicate reads
         "-s "                         # -s: Report stats
         "--output-fmt BAM "           # -O: Specify output format: SAM, BAM, CRAM (here, BAM format)
-        "{input.calmd} "             # Sorted bam input
+        "{input.calmd} "              # Sorted bam input
         "{output.markdup} "           # Markdup bam output
         "&> {log}"                    # Log redirection
 
 ###############################################################################
 rule samtools_calmd:
-    # Aim: Generate the MD tag
+    # Aim: Tool to generate the MD tag for SNP/indel calling w/o lookin at the reference.
+    # It does this by carrying information about the reference that the read does not carry, for a particular alignment. 
+    # A SNP’s alternate base is carried in the read, but without the MD tag or use of the alignment reference, 
+    # it’s impossible to know what the reference base was. Thus, this information is carried in the MD tag.
     # Use: samtools calmd -@ [THREADS] [REF.FA] -b input.bam > output.bam 
     message:
         "SamTools calmd {wildcards.sample} sample reads ({wildcards.aligner})"
@@ -686,7 +753,7 @@ rule samtools_calmd:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_sorted.log"
     shell:
-       "samtools calmd "                                               # Samtools calmd, tools to generate the MD tag for SNP/indel calling w/o lookin at the reference
+       "samtools calmd "                                                 
         "--threads {resources.cpus} "                                   # -@: Number of additional threads to use (default: 1)
         "-b "                                                           # Output compressed BAM
         "{input.sorted} "                                               # bam input (sorted)

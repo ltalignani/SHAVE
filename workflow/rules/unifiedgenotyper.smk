@@ -286,27 +286,3 @@ rule unifiedgenotyper:
         "-XA MappingQualityRankSumTest "                #
         "-XA QualByDepth "                              #
         "-XA ReadPosRankSumTest "                       #
-
-###############################################################################
-rule samtools_index:
-    # Aim: indexing realigned fixmate sorted BAM file - needed by UnifiedGenotyper
-    # Use: samtools index -@ [THREADS] -b [realign_fixmate_sorted.bam] [realign_fixmate_sorted.bai]
-    message:
-        "SamTools indexing indel qualities BAM file {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
-    conda:
-        SAMTOOLS
-    resources:
-       cpus = CPUS
-    input:
-        bam = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam"
-    output:
-        index = "results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai"
-    log:
-        "results/11_Reports/samtools/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_index.log"
-    shell:
-        "samtools index "      # Samtools index, tools for alignments in the SAM format with command to index alignment
-        "-@ {resources.cpus} " # Number of additional threads to use (default: 0)
-        "-b "                  # -b: Generate BAI-format index for BAM files (default)
-        "{input.bam} "   # Sorted bam input
-        "{output.index} "      # Markdup bam output
-        "&> {log}"             # Log redirection
