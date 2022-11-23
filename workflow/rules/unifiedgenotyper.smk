@@ -181,8 +181,8 @@ rule bcftools_variant_filt_archive:
         "bcftools variant block compressing for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
     conda:
         BCFTOOLS
-    resources:
-        cpus = CPUS
+    threads:
+        CPUS
     input:
         variantfilt = "results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf"                  #results/04_Variants/lofreq/{sample}_{aligner}_{mincov}X_variant-filt.vcf"
     output:
@@ -192,7 +192,7 @@ rule bcftools_variant_filt_archive:
     shell:
         "bcftools "                         # bcftools,  a set of utilities that manipulate variant calls in the Variant Call Format (VCF).
         "view "                             # view : subset, filter and convert VCF and BCF files
-        "--threads {resources.cpus} "       # -@: Number of threads to use (default: 1)
+        "--threads {threads} "              # -@: Number of threads to use (default: 1)
         "{input.variantfilt} "              # VCF input file,
         "-Oz -o {output.archive} "          # -O[z|b]: output-type -o: VCF output file,
         "&> {log}"                          # Log redirection

@@ -107,6 +107,10 @@ rule all:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        index_archive = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.gz.tbi",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
+        archive = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.vcf.gz",
+                            sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         hard_filter = expand("results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         vcf = expand("results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf",
@@ -129,6 +133,51 @@ rule all:
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP)
 
 ################################ R U L E S ####################################
+rule tabix_tabarch_indexing:
+    # Aim: tab archive indexing
+    # Use: tabix [OPTIONS] [TAB.bgz]
+    message:
+        "Tabix tab archive indexing for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
+    conda:
+        SAMTOOLS
+    input:
+        archive = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.vcf.gz"
+    output:
+        index = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.gz.tbi"
+    log:
+        "results/11_Reports/tabix/{sample}_{aligner}_{markdup}_{mincov}X_variant-archive-index.log"
+    shell:
+        "tabix "             # Tabix, indexes a TAB-delimited genome position file in.tab.bgz and creates an index file
+        "{input.archive} "   # The input data file must be position sorted and compressed by bgzip
+        "-f "                # overwrite index if already existing   
+        "1> {output.index} " # Tabix output TBI index formats
+        "2> {log}"           # Log redirection
+
+###############################################################################
+rule bcftools_variant_filt_archive:
+    # Aim: Variant block compressing
+    # Use: bgzip [OPTIONS] -c -@ [THREADS] [INDEL.vcf] 1> [COMPRESS.vcf.bgz]
+    message:
+        "bcftools variant block compressing for {wildcards.sample} sample ({wildcards.aligner}-{wildcards.mincov})"
+    conda:
+        BCFTOOLS
+    threads:
+        CPUS
+    input:
+        variantfilt = "results/04_Variants/variantfiltration/{sample}_{aligner}_{markdup}_{mincov}X_hardfiltered.vcf"
+    output:
+        archive = "results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.vcf.gz"
+    log:
+        "results/11_Reports/bcftools/{sample}_{aligner}_{markdup}_{mincov}X_variant-archive.log"
+    shell:
+        "bcftools "                         # bcftools,  a set of utilities that manipulate variant calls in the Variant Call Format (VCF).
+        "view "                             # view : subset, filter and convert VCF and BCF files
+        "--threads {threads} "              # -@: Number of threads to use (default: 1)
+        "{input.variantfilt} "              # VCF input file,
+        "-Oz -o {output.archive} "          # -O[z|b]: output-type -o: VCF output file,
+        "&> {log}"                          # Log redirection
+
+###############################################################################
 rule hard_filter_calls:
     # Aim: Filter variant calls based on INFO and/or FORMAT annotations.
     # Use: gatk VariantFiltration \
