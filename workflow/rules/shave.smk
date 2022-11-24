@@ -814,7 +814,7 @@ rule samtools_markdup:
 
 ###############################################################################
 rule samtools_calmd:
-    # Aim: Tool to generate the MD tag for SNP/indel calling w/o lookin at the reference.
+    # Aim: Tool to generate the MD tag for SNP/indel calling w/o lookin at the reference. It also generates at the same time the NM (number of mismatches) tag, which records the Levenshtein distance between the read and the reference.
     # It does this by carrying information about the reference that the read does not carry, for a particular alignment. 
     # A SNP’s alternate base is carried in the read, but without the MD tag or use of the alignment reference, 
     # it’s impossible to know what the reference base was. Thus, this information is carried in the MD tag.
@@ -863,7 +863,7 @@ rule samtools_sorting:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_sorted.log"
     shell:
-        "samtools sort "              # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
+        "samtools sort "               # Samtools sort, tools for alignments in the SAM format with command to sort alignment file
         "--threads {resources.cpus} "  # -@: Number of additional threads to use (default: 1)
         "-m {resources.mem_gb}G "      # -m: Set maximum memory per thread, suffix K/M/G recognized (default: 768M)
         "-T {params.tmpdir} "          # -T: Write temporary files to PREFIX.nnnn.bam
@@ -874,10 +874,10 @@ rule samtools_sorting:
 
 ###############################################################################
 rule samtools_fixmate:
-    # Aim: This tool fills in mate coordinates, ISIZE and mate related flags fom a name-sorted or a name-collated alignment. 
+    # Aim: This tool fills in mate coordinates, and ISIZE (insert size) and mate related flags fields fom a name-sorted or a name-collated alignment. 
     # This means that before using samtools-fixmate, samtools-sort with the option of sorting by name must be used.
-    # Samtools-fixmate is usually the previous step to using samtools-markdup.
-    # Use: samtools fixmate -@ [THREADS] -m -O BAM [SORTBYNAMES.bam] [FIXMATE.bam]
+    # Samtools-fixmate is USUALLY THE PREVIOUS STEP TO USING SAMTOOLS-MARKDUP.
+    # Use: samtools fixmate -@ [THREADS] -m -O BAM [SORTBYNAMES.bam] [FIXMATE.bam] 
     message:
         "SamTools filling in mate coordinates {wildcards.sample} sample reads ({wildcards.aligner})"
     conda:
@@ -891,9 +891,9 @@ rule samtools_fixmate:
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_fixmate.log"
     shell:
-        "samtools fixmate "           # Samtools fixmate, tools for alignments in the SAM format with command to fix mate information
+        "samtools fixmate "            # Samtools fixmate, tools for alignments in the SAM format with command to fix mate information
         "--threads {resources.cpus} "  # -@: Number of additional threads to use (default: 1)
-        "-m "                          # -m: Add mate score tag
+        "-m "                          # -m: Add mate score tag. THESE ARE USED BY MARKDUP TO SELECT THE BEST READS TO KEEP.
         "--output-fmt BAM "            # -O: Specify output format: SAM, BAM, CRAM (here, BAM format)
         "{input.sortbynames} "         # Sortbynames bam input
         "{output.fixmate} "            # Fixmate bam output
