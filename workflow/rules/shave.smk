@@ -95,7 +95,6 @@ onstart:
     shell("mkdir -p Cluster_logs/indelrealigner")
     shell("mkdir -p Cluster_logs/realignertargetcreator")
     shell("mkdir -p Cluster_logs/bwa_mapping")
-    shell("mkdir -p Cluster_logs/bowtie2_mapping")
 
 ############################# O N S U C C E S S ##############################
 onsuccess:
