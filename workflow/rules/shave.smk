@@ -49,6 +49,7 @@ LOFREQ = config["conda"][OS]["lofreq"]              # LoFreq
 GATK = config["conda"][OS]["gatk"]                  # GATK 3.8
 GATK4 = config["conda"][OS]["gatk4"]                # GATK 4.3.0
 PICARD = config["conda"][OS]["picard"]              # Picard 2.24.7
+QUALIMAP = config["conda"][OS]["qualimap"]          # Qualimap 2.2.2d
 
 ###############################################################################
 # PARAMETERS #
@@ -106,6 +107,7 @@ rule all:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        qualimap = "results/00_Quality_Control/qualimap/",
         index_archive = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.gz.tbi",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         archive = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_variant-filt.vcf.gz",
@@ -114,15 +116,15 @@ rule all:
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         vcf = expand("results/04_Variants/unifiedgenotyper/{sample}_{aligner}_{markdup}_{mincov}X_indels.vcf",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
-        callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_callable_status.bed",
+        callable_loci = expand("results/05_Validation/callableloci/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_callable_status.bed",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
-        stats = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted_stats.txt",
+        stats = expand("results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted_stats.txt",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),        
         igv_output = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_realignertargetcreator.bed",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
-        index_post_realign = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bai",
+        index_post_realign = expand("results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bai",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
-        realigned_fixed_bam = expand("results/05_Validation/{sample}_{aligner}_{markdup}_{mincov}X_realign_fix-mate_sorted.bam",
+        realigned_fixed_bam = expand("results/05_Validation/realigned/{sample}_{aligner}_{markdup}_{mincov}X_realign_fixed-mate_sorted.bam",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
         indelqual = expand("results/04_Variants/{sample}_{aligner}_{markdup}_{mincov}X_indel-qual.bam",
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP, mincov = MINCOV),
@@ -132,6 +134,33 @@ rule all:
                             sample = SAMPLE, aligner = ALIGNER, markdup = MARKDUP)
 
 ################################ R U L E S ####################################
+rule multiqc_reports_aggregation:
+    # Aim: aggregates bioinformatics analyses results into a single report
+    # Use: multiqc [OPTIONS] --output [MULTIQC/] [FASTQC/] [MULTIQC/]
+    priority: 42
+    message:
+        "MultiQC reports aggregating"
+    conda:
+        MULTIQC
+    input:
+        fastqc = "results/00_Quality_Control/fastqc/",
+        fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        qualimap = "results/00_Quality_Control/qualimap/"
+    output:
+        multiqc = directory("results/00_Quality_Control/multiqc/")
+    log:
+        "results/11_Reports/quality/multiqc.log"
+    shell:
+        "multiqc "                  # Multiqc, searches in given directories for analysis & compiles a HTML report
+        "--quiet "                   # -q: Only show log warning
+        "--outdir {output.multiqc} " # -o: Create report in the specified output directory
+        "{input.fastqc} "            # Input FastQC files
+        "{input.fastqscreen} "       # Input Fastq-Screen
+        "{input.qualimap} "          # Input Qualimap
+        "--no-ansi "                 # Disable coloured log
+        "&> {log}"                   # Log redirection
+
+###############################################################################
 rule tabix_tabarch_indexing:
     # Aim: tab archive indexing
     # Use: tabix [OPTIONS] [TAB.bgz]
@@ -345,6 +374,33 @@ rule samtools_stats:
     shell:
         """
         samtools stats --threads {resources.cpus} -r {input.refpath} {input.bam} 1> {output.stats} 2> {log}
+        """
+
+###############################################################################
+rule qualimap:
+    # Aim: Qualimap is a platform-independent application written in Java and R that provides both a Graphical User Interface (GUI) and a 
+    # command-line interface to facilitate the quality control of alignment sequencing data. Shortly, Qualimap:
+    #       1. Examines sequencing alignment data according to the features of the mapped reads and their genomic properties
+    #       2. Povides an overall view of the data that helps to to the detect biases in the sequencing and/or mapping of the data and eases decision-making for further analysis.
+    #
+    # Use: qualimap bamqc -bam {input.sorted} \ 
+    #       -c \                        Paint chromosome limits inside charts
+    #       -nt {threads} \             
+    #       -outdir {output.report} \   Output directory for HTML report (default value is report.html)
+    #       -outformat PDF \            Format of the ouput report (PDF or HTML, default is HTML)
+    #       -sd                         Activate this option to skip duplicate alignments from the analysis                   
+    conda:
+        QUALIMAP
+    input:
+        bam = "results/05_Validation/realigned/"
+    output:
+        report = "results/00_Quality_Control/qualimap/"
+    threads: CPUS
+    log:
+        "results/11_Reports/qualimap/qualimap.log"
+    shell:
+        """
+        qualimap bamqc -bam {input.sorted} -c -nt {threads} -outdir {output.report} -outformat HTML -sd
         """
 
 ###############################################################################
@@ -1073,31 +1129,6 @@ rule cutadapt_adapters_removing:
         "{input.fwdreads} "                  # Input forward reads R1.fastq
         "{input.revreads} "                  # Input reverse reads R2.fastq
         "&> {log}"                           # Log redirection
-
-###############################################################################
-rule multiqc_reports_aggregation:
-    # Aim: aggregates bioinformatics analyses results into a single report
-    # Use: multiqc [OPTIONS] --output [MULTIQC/] [FASTQC/] [MULTIQC/]
-    priority: 42
-    message:
-        "MultiQC reports aggregating"
-    conda:
-        MULTIQC
-    input:
-        fastqc = "results/00_Quality_Control/fastqc/",
-        fastqscreen = "results/00_Quality_Control/fastq-screen/"
-    output:
-        multiqc = directory("results/00_Quality_Control/multiqc/")
-    log:
-        "results/11_Reports/quality/multiqc.log"
-    shell:
-        "multiqc "                  # Multiqc, searches in given directories for analysis & compiles a HTML report
-        "--quiet "                   # -q: Only show log warning
-        "--outdir {output.multiqc} " # -o: Create report in the specified output directory
-        "{input.fastqc} "            # Input FastQC files
-        "{input.fastqscreen} "       # Input Fastq-Screen
-        "--no-ansi "                 # Disable coloured log
-        "&> {log}"                   # Log redirection
 
 ###############################################################################
 rule fastqscreen_contamination_checking:

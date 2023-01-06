@@ -26,7 +26,7 @@ echo -e "${blue}Affiliation${nc} ___________ UMR_MIVEGEC"
 echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment pipeline for ${red}VE${nc}ctor v.1"
 echo -e "${blue}Date${nc} __________________ 2022.10.05"
 echo -e "${blue}Run${nc} ___________________ bash Start_shave1.sh"
-echo -e "${blue}Latest Modification${nc} ___ Removed UnifiedGenotyper (Please run Start_unifiedGenotyper.sh pipeline once Shave has finished"
+echo -e "${blue}Latest Modification${nc} ___ "
 
 
 ###### Hardware ######

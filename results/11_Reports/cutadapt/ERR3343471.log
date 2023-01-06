@@ -1,7 +1,7 @@
 This is cutadapt 4.1 with Python 3.9.13
 Command line parameters: --cores 10 --trim-n --minimum-length 50 --adapter AGATCGGAAGAGC -A AGATCGGAAGAGC --adapter CTGTCTCTTATACACATC -A CTGTCTCTTATACACATC --adapter TGGAATTCTCGGGTGCCAAGG -A TGGAATTCTCGGGTGCCAAGG --output results/01_Trimming/cutadapt/ERR3343471_cutadapt-removed_R1.fastq.gz --paired-output results/01_Trimming/cutadapt/ERR3343471_cutadapt-removed_R2.fastq.gz resources/reads/ERR3343471_R1.fastq.gz resources/reads/ERR3343471_R2.fastq.gz
 Processing paired-end reads on 10 cores ...
-Finished in 1.82 s (9 µs/read; 6.86 M reads/minute).
+Finished in 1.90 s (9 µs/read; 6.58 M reads/minute).
 
 === Summary ===
 

@@ -31,6 +31,7 @@ conda:
     gawk: "../envs/osx/gawk-5.1.0.yaml" # Awk          ver. 5.1.0
     lofreq: "../envs/osx/lofreq-2.1.5.yaml" # Lofreq       ver. 2.1.5
     multiqc: "../envs/osx/multiqc-1.12.yaml" # MultiQC      ver. 1.12
+    qualimap: "../envs/osx/qualimap-2.2.2.yaml" # Qualimap    vers. 2.2.2d
     samtools: "../envs/osx/samtools-1.15.1.yaml" # Samtools     ver. 1.15.1
     sickle-trim: "../envs/osx/sickle-trim-1.33.yaml" # Sickle-trim  ver. 1.33
     gatk: "../envs/osx/gatk-3.8.yaml" # gatk ver. 3.8
@@ -47,6 +48,7 @@ conda:
     gawk: "../envs/linux/gawk-5.1.0.yaml" # Awk          ver. 5.1.0
     lofreq: "../envs/linux/lofreq-2.1.5.yaml" # Lofreq       ver. 2.1.5
     multiqc: "../envs/linux/multiqc-1.12.yaml" # MultiQC      ver. 1.12
+    qualimap: "../envs/linux/qualimap-2.2.2.yaml" # Qualimap    vers. 2.2.2d
     samtools: "../envs/linux/samtools-1.15.1.yaml" # Samtools     ver. 1.15.1
     sickle-trim: "../envs/linux/sickle-trim-1.33.yaml" # Sickle-trim  ver. 1.33
     gatk: "../envs/linux/gatk-3.8.yaml" # gatk ver. 3.8
