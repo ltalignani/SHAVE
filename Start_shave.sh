@@ -32,7 +32,7 @@ echo -e "${blue}Latest Modification${nc} ___ "
 ###### Hardware ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}#####${nc} ${red}OPERATING SYSTEM${nc} ${green}#####${nc}"
+echo -e "${green}#####${nc} ${red}OS${nc} ${green}#####${nc}"
 echo -e "${green}--------------------${nc}"
 echo ""
 
@@ -53,7 +53,7 @@ echo -e "${blue}Operating system${nc} _______ ${red}${os}${nc}" # Print operatin
 ###### Hardware ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}###########${nc} ${red}HARDWARE CHARACTERISTICS${nc} ${green}###########${nc}"
+echo -e "${green}###########${nc} ${red}HARDWARE SPECIFICATIONS${nc} ${green}###########${nc}"
 echo -e "${green}------------------------------------------------------------------------${nc}"
 echo ""
 
@@ -116,7 +116,7 @@ echo -e "${blue}Start Time${nc} ____________ ${time_stamp_start}"               
 ###### Installations ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}#########${nc} ${red}APPS INSTALLATIONS WITH CONDA${nc} ${green}########${nc}"
+echo -e "${green}#########${nc} ${red}PROGRAMS INSTALLATIONS WITH CONDA${nc} ${green}########${nc}"
 echo -e "${green}------------------------------------------------------------------------${nc}"
 echo ""
 
@@ -172,7 +172,7 @@ echo ""
 #rename "s/_S\d+_/_/" ${workdir}/resources/reads/*.fastq.gz                 # Remove barcode-ID like {_S001_}
 rename "s/_L\d+_/_/" ${workdir}/resources/reads/*.fastq.gz                  # Remove line-ID ID like {_L001_}
 rename "s/_001.fastq.gz/.fastq.gz/" ${workdir}/resources/reads/*.fastq.gz   # Remove end-name ID like {_001}.fastq.gz
-#rename 's/(\w_).*_(R[1-2]).*(.fastq.gz)/$1$2$3/' *.fastq.gz                 # Keep only expr. in ( )
+#rename 's/(\w_).*_(R[1-2]).*(.fastq.gz)/$1$2$3/' *.fastq.gz                # Keep only expr. in ( )
 
 ###### Call snakemake pipeline ######
 echo ""

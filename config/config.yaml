@@ -107,7 +107,7 @@ bowtie2:
 ### SICKLE-TRIM --------------------------------------------------------------------------------------
 sickle-trim:
   command: "pe" # Reading (default and should be 'pe' for paired-end sequences)
-  encoding: "sanger" # Quality encoding (dafault, and sould be 'sanger')
+  encoding: "sanger" # Quality encoding (dafault, and should be 'sanger')
   ## Available options (only for information):
   ## 'sanger'           # CASAVA >= 1.8 for "recent" Illumina reads (default)
   ## 'illumina'         # CASAVA 1.3 to 1.7 for "old" Illumina reads

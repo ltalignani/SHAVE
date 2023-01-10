@@ -19,7 +19,7 @@ SHAVE is a bioinformatic pipeline used for mosquitoes (*Aedes / Anopheles*) geno
 
 In brief, SHAVE remove adatpers, report quality reads, aligns reads to a reference genome, fix incorrect mates, mark duplicates, add indel qualities to BAM files, validate BAM files according to SAM/BAM specifications. 
 
-However, unlike SHAVE which uses HaplotypeCaller to call variants and obtain genotype likelihoods, SHAVE has been created to respect the parameters of the MalariaGEN WDL pipelines, in order to be able to call variants and genotypes under the same conditions the MalariaGEN may have used. That's why SHAVE uses GATK's RealignerTargetCreator, IndelRealigner and UnifiedGenotyper to call variants and Genotypes as made by the MalariaGEN. 
+However, unlike SHAVE2 which uses HaplotypeCaller to call variants and obtain genotype likelihoods, SHAVE has been created to respect the parameters of the MalariaGEN WDL pipelines, in order to be able to call variants and genotypes under the same conditions the MalariaGEN may have used. That's why SHAVE uses GATK's RealignerTargetCreator, IndelRealigner and UnifiedGenotyper to call variants and Genotypes as made by the MalariaGEN. 
 
 If you want to use a more modern way of calling variants, use [**SHAVE2**](https://github.com/ltalignani/SHAVE2). 
 
