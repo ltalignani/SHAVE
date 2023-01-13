@@ -23,9 +23,9 @@ echo ""
 echo -e "${blue}Name${nc} __________________ Start_shave.sh"
 echo -e "${blue}Author${nc} ________________ Loïc Talignani"
 echo -e "${blue}Affiliation${nc} ___________ UMR_MIVEGEC"
-echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment pipeline for ${red}VE${nc}ctor v.1"
+echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment pipeline for ${red}VE${nc}ctors v.1"
 echo -e "${blue}Date${nc} __________________ 2022.10.05"
-echo -e "${blue}Run${nc} ___________________ bash Start_shave1.sh"
+echo -e "${blue}Run${nc} ___________________ bash Start_shave.sh"
 echo -e "${blue}Latest Modification${nc} ___ "
 
 
@@ -121,8 +121,8 @@ echo -e "${green}---------------------------------------------------------------
 echo ""
 
 # Snakemake
-#snake_ver="7.8.2"
-snake_ver="6.12.3"
+
+snake_ver="6.12.3" # "7.19.1"
 if ls ~/miniconda3/bin/snakemake 2> /dev/null
 then
     echo ""
@@ -193,7 +193,8 @@ snakemake \
     --snakefile ${workdir}/workflow/rules/shave.smk \
     --config os=${os} \
     --rerun-incomplete \
-    --unlock
+    --unlock \
+    --conda-frontend conda # Default "mamba", recommended because much faster, but : "Library not loaded: @rpath/libarchive.13.dylib"
 
 echo ""
 echo -e "${blue}Conda environments list:${nc}"
@@ -210,7 +211,9 @@ snakemake \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
-    --list-conda-envs
+    --use-conda \
+    --list-conda-envs \
+    --conda-frontend conda # Default "mamba", recommended because much faster, but : "Library not loaded: @rpath/libarchive.13.dylib"
 
 echo ""
 echo -e "${blue}Conda environments update:${nc}"
@@ -227,7 +230,9 @@ snakemake \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
-    --conda-cleanup-envs
+    --use-conda \
+    --conda-cleanup-envs \
+    --conda-frontend conda # Default "mamba", recommended because much faster, but : "Library not loaded: @rpath/libarchive.13.dylib"
 
 echo ""
 echo -e "${blue}Conda environments setup:${nc}"
@@ -294,6 +299,7 @@ snakemake \
     --max-threads ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
+    --latency-wait 120 \
     --keep-going \
     --use-conda \
     --conda-frontend conda \

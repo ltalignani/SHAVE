@@ -74,9 +74,9 @@ BWAPATH = config["bwa"]["path"]                     # BWA path to indexes
 BT2PATH = config["bowtie2"]["path"]                 # Bowtie2 path to indexes
 SENSITIVITY = config["bowtie2"]["sensitivity"]      # Bowtie2 sensitivity preset
 
-REFPATH = config["path"]                            # Path to genomes references
-REFERENCE = config["reference"]                     # Genome reference sequence, in fasta format
-ALLELES = config["alleles"]["alleles_target"]       # Alleles against which to genotype (VCF format) 
+REFPATH = config["consensus"]["path"]               # Path to genomes references
+REFERENCE = config["consensus"]["reference"]        # Genome reference sequence, in fasta format
+ALLELES = config["alleles"]["alleles_target"]          # Alleles against which to genotype (VCF format) 
 MINCOV = config["consensus"]["mincov"]              # Minimum coverage, mask lower regions with 'N'
 MINAF = config["consensus"]["minaf"]                # Minimum allele frequency allowed
 IUPAC = config["consensus"]["iupac"]                # Output variants in the form of IUPAC ambiguity codes
@@ -106,25 +106,24 @@ rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
-        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
-        hard_filter = "results/05_Variants/merged_hardfiltered.vcf.gz",
-        tabix = "results/05_Variants/merged.vcf.gz.tbi",
-        bgzip = "results/05_Variants/merged.vcf.gz",
-        vcf = expand("results/05_Variants/{sample}_{aligner}.vcf", sample=SAMPLE, aligner=ALIGNER),
-        check = expand("results/00_Quality_Control/validatesamfile/{sample}_{aligner}_md_realigned_fixed_ValidateSam.txt", sample=SAMPLE, aligner=ALIGNER),
-        flagstat = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_bam.flagstat", sample=ALIGNER, aligner=ALIGNER),
-        idxstats = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed.idxstats", sample=SAMPLE, aligner=ALIGNER),
-        stats = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_stats.txt", sample=SAMPLE, aligner=ALIGNER),        
-        igv_output = expand("results/04_Polishing/{sample}_{aligner}_realignertargetcreator.bed", sample=SAMPLE, aligner=ALIGNER),
-        index_post_realign = expand("results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai", sample=SAMPLE, aligner=ALIGNER),
-        fixmateinformation = expand("results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam", sample=SAMPLE, aligner=ALIGNER),
-        covstats = expand("results/03_Coverage/{sample}_{aligner}_{mincov}X_coverage-stats.tsv", sample=SAMPLE, aligner=ALIGNER, mincov=MINCOV),
+        qualimap = "results/00_Quality_Control/qualimap/",
+        index_archive = "results/04_Variants/merged_hardfiltered.vcf.gz.tbi",
+        archive = "results/04_Variants/merged_hardfiltered.vcf.gz",
+        hard_filter = "results/04_Variants/variantfiltration/merged_hardfiltered.vcf",
+        vcf = "results/04_Variants/unifiedgenotyper/merged_indels.vcf",
+        check = "results/05_Validation/validatesamfile/merged_realign_fixed_ValidateSam.txt",
+        stats = "results/05_Validation/realigned/merged_realign_fixed_stats.txt",        
+        igv_output = "results/04_Variants/merged_realignertargetcreator.bed",
+        index_post_realign = "results/04_Variants/realigned/merged_realign_fixed.bai",
+        fixmateinformation = "results/04_Variants/realigned/merged_realign_fixed.bam",
+        covstats = "results/03_Coverage/merged_coverage-stats.tsv",
+        markduplicate = "results/02_Mapping/merged-mark-dup.bam"
 
 ################################ R U L E S ####################################
 rule multiqc_reports_aggregation:
     # Aim: aggregates bioinformatics analyses results into a single report
-    # Use: multiqc [OPTIONS] --output [MULTIQC/] [FASTQC/] [FASTQSCREEN/] [qulimaps/]
+    # Use: multiqc [OPTIONS] --output [MULTIQC/] [FASTQC/] [MULTIQC/]
     priority: 42
     message:
         "MultiQC reports aggregating"
@@ -133,7 +132,7 @@ rule multiqc_reports_aggregation:
     input:
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
-        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
+        qualimap = "results/00_Quality_Control/qualimap/"
     output:
         multiqc = directory("results/00_Quality_Control/multiqc/")
     log:
@@ -149,7 +148,35 @@ rule multiqc_reports_aggregation:
         "&> {log}"                   # Log redirection
 
 ###############################################################################
-rule gatk_filter:
+rule tabix:
+    input:
+        "results/04_Variants/merged_hardfiltered.vcf.gz",
+    output:
+        "results/04_Variants/merged_hardfiltered.vcf.gz.tbi",
+    log:
+        "results/11_Reports/tabix/merged_hardfiltered.log",
+    params:
+        # pass arguments to tabix (e.g. index a vcf)
+        "-p vcf",
+    wrapper:
+        "v1.21.1/bio/tabix/index"
+
+###############################################################################
+rule bgzip:
+    input:
+        "results/04_Variants/variantfiltration/merged_hardfiltered.vcf",
+    output:
+        "results/04_Variants/merged_hardfiltered.vcf.gz",
+    params:
+        extra="", # optional
+    threads: CPUS
+    log:
+        "results/11_Reports/bgzip/merged_hardfiltered.vcf.gz.log",
+    wrapper:
+        "v1.21.1/bio/bgzip"
+
+###############################################################################
+rule hard_filter_calls:
     # Aim: Filter variant calls based on INFO and/or FORMAT annotations.
     # Use: gatk VariantFiltration \
     # -R reference.fasta \
@@ -161,71 +188,23 @@ rule gatk_filter:
     # --filter-expression "MQ0 > 50"
     message:
         "VariantFiltration Hard-filtering"
+    conda:
+        GATK4
     input:
         ref="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-        vcf="results/05_Variants/merged.vcf.gz",
+        vcf="results/04_Variants/unifiedgenotyper/merged_indels.vcf",
     output:
-        vcf="results/05_Variants/merged_hardfiltered.vcf.gz",
+        vcf="results/04_Variants/variantfiltration/merged_hardfiltered.vcf",
     params:
         filters={"myfilter": "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"},
         extra="",
         java_opts="",
     resources:
-        mem_mb=16000
+        mem_gb=MEM_GB
     log:
         "results/11_Reports/variantfiltration/merged_hardfiltered.log",
     wrapper:
-        "v1.21.2/bio/gatk/variantfiltration"
-
-###############################################################################
-rule tabix:
-    input:
-        "results/05_Variants/merged.vcf.gz",
-    output:
-        "results/05_Variants/merged.vcf.gz.tbi",
-    log:
-        "results/11_Reports/tabix/merged_tabix.log",
-    params:
-        # pass arguments to tabix (e.g. index a vcf)
-        "-p vcf",
-    wrapper:
-        "v1.21.2/bio/tabix/index"
-
-###############################################################################
-rule bgzip:
-    input:
-        "results/05_Variants/merged.vcf",
-    output:
-        "results/05_Variants/merged.vcf.gz",
-    params:
-        extra="", # optional
-    threads: CPUS
-    log:
-        "results/11_Reports/bgzip/merged_hardfiltered.vcf.gz.log",
-    wrapper:
-        "v1.21.2/bio/bgzip"
-
-###############################################################################
-rule bcftools_merge:
-    # Aim: Merge multiple VCF/BCF files from non-overlapping sample sets to create one multi-sample file. 
-    #      For example, when merging file A.vcf.gz containing samples S1, S2 and S3 and file B.vcf.gz containing samples S3 and S4, 
-    #      the output file will contain five samples named S1, S2, S3, 2:S3 and S4.
-    message:
-        "bcftools merging all VCFs"
-    input:
-        calls=expand("results/05_Variants/{sample}_{aligner}.vcf", sample=SAMPLE, aligner=ALIGNER),
-    output:
-        temp("results/05_Variants/merged.vcf"),
-    log:
-        "results/11_Reports/bcftools/mergevcfs.log",
-    params:
-        uncompressed_bcf=False,
-        extra="",  # optional parameters for bcftools concat (except -o)
-    threads: CPUS
-    resources:
-        mem_mb=16000,
-    wrapper:
-        "v1.21.2/bio/bcftools/merge"
+        "0.74.0/bio/gatk/variantfiltration"
 
 ###############################################################################
 rule unifiedgenotyper:
@@ -242,16 +221,16 @@ rule unifiedgenotyper:
     conda:
         GATK
     input:
-        bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam",
-        ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta", # {config[consensus][path]}+{config[consensus][reference]}
-        index = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai"
+        bam = "results/04_Variants/realigned/merged_realign_fixed.bam",
+        ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        index = "results/04_Variants/realigned/merged_realign_fixed.bai"
         #alleles = ALLELES
     output:
-        vcf="results/05_Variants/{sample}_{aligner}.vcf"
+        vcf="results/04_Variants/unifiedgenotyper/merged_indels.vcf"
     log:
-        "results/11_Reports/unifiedgenotyper/{sample}_{aligner}.log"
+        "results/11_Reports/unifiedgenotyper/merged_indels.log"
     benchmark:
-        "benchmarks/unifiedgenotyper/{sample}_{aligner}.tsv"
+        "benchmarks/unifiedgenotyper/merged_indels.tsv"
     threads: CPUS
     shell:
         "gatk3 -T UnifiedGenotyper "                    # Genome Analysis Tool Kit - Broad Institute UnifiedGenotyper
@@ -289,15 +268,15 @@ rule unifiedgenotyper:
 ###############################################################################
 rule samtools_flagstat:
     input:
-        expand("results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam", sample=SAMPLE, aligner=ALIGNER),
+        "results/04_Variants/realigned/merged_realign_fixed.bam",
     output:
-        "results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_bam.flagstat",
+        "results/05_Validation/realigned/merged_realign_fixed_bam.flagstat",
     log:
-        "results/11_Reports/samtools/flagstat/{sample}_{aligner}_realigned_fixed_bam.log",
+        "results/11_Reports/samtools/flagstat/merged_realign_fixed_bam.log",
     params:
         extra="",  # optional params string
     wrapper:
-        "v1.21.2/bio/samtools/flagstat"
+        "v1.21.1/bio/samtools/flagstat"
 
 ###############################################################################
 rule samtools_idxstats:
@@ -308,16 +287,16 @@ rule samtools_idxstats:
     #       The output is TAB-delimited with each line consisting of reference sequence name, sequence length, # mapped read-segments and # unmapped read-segments. 
     #       It is written to stdout. Note this may count reads multiple times if they are mapped more than once or in multiple fragments.
     input:
-        bam="results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam",
-        idx="results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai",
+        bam="results/04_Variants/realigned/merged_realign_fixed.bam",
+        idx="results/04_Variants/realigned/merged_realign_fixed.bai",
     output:
-        "results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed.idxstats",
+        "results/05_Validation/realigned/merged_realign_fixed_bam.idxstats",
     log:
-        "results/11_Reports/samtools/idxstats/{sample}_{aligner}_realigned_fixed_idxstats.log",
+        "results/11_Reports/samtools/idxstats/merged_realign_fixed_bam.log",
     params:
         extra="",  # optional params string
     wrapper:
-         "v1.21.2/bio/samtools/idxstats"
+        "v1.21.1/bio/samtools/idxstats"
 
 ###############################################################################
 rule samtools_stats:
@@ -330,12 +309,12 @@ rule samtools_stats:
     resources:
        cpus = CPUS
     input:
-        bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam",
+        bam = "results/04_Variants/realigned/merged_realign_fixed.bam",
         refpath = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta"
     output:
-        stats = "results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_stats.txt"
+        stats = "results/05_Validation/realigned/merged_realign_fixed_stats.txt"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_realigned_fixed_stats.log"
+        "results/11_Reports/samtools/merged_realign_fixed_stats.log"
     shell:
         """
         samtools stats --threads {resources.cpus} -r {input.refpath} {input.bam} 1> {output.stats} 2> {log}
@@ -352,15 +331,23 @@ rule validate_sam:
     conda:
         PICARD
     input:
-        bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam",
+        bam = "results/04_Variants/realigned/merged_realign_fixed.bam",
     output:
-        check = "results/00_Quality_Control/validatesamfile/{sample}_{aligner}_md_realigned_fixed_ValidateSam.txt"
+        check = "results/05_Validation/validatesamfile/merged_realign_fixed_ValidateSam.txt"
     threads: CPUS
     log:
-        "results/11_Reports/validatesamfiles/{sample}_{aligner}_realigned_fixed_validate_bam.log"
+        "results/11_Reports/validatesamfiles/merged_realign_fixed-mate_sorted_validate_bam.log"
     shell:
         """
-        picard ValidateSamFile -I {input.bam} -O {output.check} -M SUMMARY > {log} 2>&1 || true
+        set +e
+        picard ValidateSamFile -I {input.bam} -M SUMMARY
+        exitcode=$?
+        if [ $exitcode -eq 1 ]
+        then
+            exit 1
+        else
+            exit 0
+        fi
         """
 
 ###############################################################################
@@ -379,20 +366,15 @@ rule qualimap:
     conda:
         QUALIMAP
     input:
-        bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam"
+        bam = "results/04_Variants/realigned/merged_realign.bam"
     output:
-        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html"),
-        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/genome_fraction_coverage.txt"),
-        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt"),
-        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/genome_results.txt"),
-        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/coverage_histogram.txt")
+        report = directory("results/00_Quality_Control/qualimap/")
     threads: CPUS
     log:
-        stderr="results/11_Reports/qualimap/logs/{sample}_{aligner}_qualimap.stderr",
-        stdout="results/11_Reports/qualimap/logs/{sample}_{aligner}_qualimap.stdout"
+        "results/11_Reports/qualimap/qualimap.log"
     shell:
         """
-        qualimap bamqc -bam {input.bam} -c -nt {threads} -outdir results/00_Quality_Control/qualimap/{wildcards.sample}_{wildcards.aligner} -sd > {log.stdout} 2> {log.stderr}
+        qualimap bamqc -bam {input.bam} -c -nt {threads} -outdir {output.report} -outformat HTML -sd
         """
 
 ###############################################################################
@@ -406,11 +388,11 @@ rule samtools_index_post_realign:
     resources:
        cpus = CPUS
     input:
-        fixedbam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam"
+        fixedbam = "results/04_Variants/realigned/merged_realign_fixed.bam"
     output:
-        index = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai"
+        index = "results/04_Variants/realigned/merged_realign_fixed.bai"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_realigned_fixed_indexed.log"
+        "results/11_Reports/samtools/merged_realign_fixed_indexed.log"
     threads: 
         CPUS
     shell:
@@ -432,12 +414,12 @@ rule fixmateinformation:
     conda:
         PICARD
     input:
-        realigned = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned.bam",
+        realigned = "results/04_Variants/realigned/merged_realign.bam",
     output:
-        fixed = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam"
+        fixed = "results/04_Variants/realigned/merged_realign_fixed.bam"
     threads: CPUS
     log:
-        "results/11_Reports/fixmateinformation/{sample}_{aligner}_realigned_fixed.log"
+        "results/11_Reports/fixmateinformation/merged_realign_fixed.log"
     shell:
         """
         picard FixMateInformation -I {input.realigned} -O {output.fixed} --ADD_MATE_CIGAR true
@@ -459,26 +441,26 @@ rule indelrealigner:
     message:
         "Indel realignment"
     input:
-        bam="results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bam",
-        bai="results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bai",
+        bam="results/02_Mapping/merged-mark-dup.bam",
+        bai="results/02_Mapping/merged-mark-dup.bai",
         ref="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
         fai="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta.fai",
         dict="resources/genomes/GCA_018104305.1_AalbF3_genomic.dict",
-        target_intervals="results/04_Polishing/{sample}_{aligner}.intervals"
+        target_intervals="results/04_Variants/merged.intervals"
     output:
-        bam= temp("results/04_Polishing/realigned/{sample}_{aligner}_md_realigned.bam"),
-        bai= temp("results/04_Polishing/realigned/{sample}_{aligner}_md_realigned.bai"),
+        bam="results/04_Variants/realigned/merged_realign.bam",
+        bai="results/04_Variants/realigned/merged_realign.bai",
     benchmark:
-        "benchmarks/indelrealigner/{sample}_{aligner}.tsv",
+        "benchmarks/indelrealigner/merged.tsv",
     log:
-        "results/11_Reports/indelrealigner/{sample}_{aligner}.log",
+        "results/11_Reports/indelrealigner/merged.log",
     params:
         extra="--defaultBaseQualities 20 --filter_reads_with_N_cigar",  # optional
     threads: CPUS
     resources:
         mem_mb=16000,
     wrapper:
-        "v1.21.2/bio/gatk3/indelrealigner"
+        "v1.19.1/bio/gatk3/indelrealigner"
 
 ###############################################################################
 rule awk_intervals_for_IGV:
@@ -490,13 +472,13 @@ rule awk_intervals_for_IGV:
     conda:
         GAWK
     input:
-        intervals="results/04_Polishing/{sample}_{aligner}.intervals"
+        intervals="results/04_Variants/merged.intervals"
     params:
         cmd = r"""'BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}'"""
     output:
-        bed = "results/04_Polishing/{sample}_{aligner}_realignertargetcreator.bed"
+        bed = "results/04_Variants/merged_realignertargetcreator.bed"
     log:
-        "results/11_Reports/awk/{sample}_{aligner}_intervals_for_IGV.log"
+        "results/11_Reports/awk/merged_intervals_for_IGV.log"
     threads: 
         CPUS
     shell:
@@ -519,24 +501,24 @@ rule realignertargetcreator:
     message:
         "RealignerTargetCreator creates a target intervals file for indel realignment"
     input:
-        bam="results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bam",
-        bai="results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bai",
+        bam="results/02_Mapping/merged-mark-dup.bam",
+        bai="results/02_Mapping/merged-mark-dup.bai",
         ref="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
         fai="resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta.fai",
         dict="resources/genomes/GCA_018104305.1_AalbF3_genomic.dict",
     output:
-        intervals=temp("results/04_Polishing/{sample}_{aligner}.intervals"),
+        intervals=temp("results/04_Variants/merged.intervals"),
     benchmark:
-        "benchmarks/realignertargetcreator/{sample}_{aligner}.tsv"
+        "benchmarks/realignertargetcreator/merged.tsv"
     log:
-        "results/11_Reports/realignertargetcreator/{sample}_{aligner}.log",
+        "results/11_Reports/realignertargetcreator/merged.log",
     params:
         extra="--defaultBaseQualities 20 --filter_reads_with_N_cigar",  # optional
     resources:
         mem_mb=16000,
     threads: CPUS
     wrapper:
-        "v1.21.2/bio/gatk3/realignertargetcreator"
+        "v1.19.1/bio/gatk3/realignertargetcreator"
 
 ###############################################################################
 rule awk_coverage_stats:
@@ -549,11 +531,11 @@ rule awk_coverage_stats:
     params:
         mincov = MINCOV
     input:
-        genomecov = "results/03_Coverage/{sample}_{aligner}_sorted-mark-dup-genome-cov.bed"
+        genomecov = "results/03_Coverage/merged-genome-cov.bed"
     output:
-        covstats = "results/03_Coverage/{sample}_{aligner}_{mincov}X_coverage-stats.tsv"
+        covstats = "results/03_Coverage/merged_coverage-stats.tsv"
     log:
-        "results/11_Reports/awk/{sample}_{aligner}_{mincov}X-coverage-stats.log"
+        "results/11_Reports/awk/merged_coverage-stats.log"
     threads: 
         CPUS
     shell:
@@ -568,9 +550,9 @@ rule awk_coverage_stats:
         """ "sample_id", "\t", """                 # Sample ID header
         """ "mean_depth", "\t", """                # Mean depth header
         """ "standard_deviation", "\t", """        # Standard deviation header
-        """ "cov_percent_@{wildcards.mincov}X" """ # Coverage percent @ mincov X header
+        """ "cov_percent_@10X" """                 # Coverage percent @ mincov X header
         "ORS "                                     # \n newline
-        """ "{wildcards.sample}", "\t", """        # Sample ID value
+        """ "Merged", "\t", """                     # Sample ID value
         """ int(totalBases/genomeSize), "\t", """  # Mean depth value
         """ int(sqrt((totalBasesSq/genomeSize)-(totalBases/genomeSize)**2)), "\t", """ # Standard deviation value
         """ supMinCov/genomeSize*100 """           # Coverage percent @ mincov X value
@@ -588,12 +570,12 @@ rule bedtools_genome_coverage:
     conda:
         BEDTOOLS
     input:
-        markdup = "results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bam",
-        index = "results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bai"
+        markdup = "results/02_Mapping/merged-mark-dup.bam",
+        index = "results/02_Mapping/merged-mark-dup.bai"
     output:
-        genomecov = "results/03_Coverage/{sample}_{aligner}_sorted-mark-dup-genome-cov.bed"
+        genomecov = "results/03_Coverage/merged-genome-cov.bed"
     log:
-        "results/11_Reports/bedtools/{sample}_{aligner}_sorted-mark-dup-genome-cov.log"
+        "results/11_Reports/bedtools/merged-genome-cov.log"
     shell:
         """
         bedtools genomecov -bga -ibam {input.markdup} 1> {output.genomecov} 2> {log}
@@ -610,11 +592,11 @@ rule samtools_index_markdup:
     resources:
        cpus = CPUS
     input:
-        markdup = "results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bam",
+        markdup = "results/02_Mapping/merged-mark-dup.bam"
     output:
-        index = temp("results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bai"),
+        index = "results/02_Mapping/merged-mark-dup.bai"
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_sorted-mark-dup-index.log"
+        "results/11_Reports/samtools/merged-mark-dup-index.log"
     shell:
         "samtools index "     # Samtools index, tools for alignments in the SAM format with command to index alignment
         "-@ {resources.cpus} " # --threads: Number of additional threads to use (default: 1)
@@ -623,39 +605,16 @@ rule samtools_index_markdup:
         "{output.index} "      # Markdup index output
         "&> {log}"             # Log redirection
 
-###############################################################################
-rule SetNmMdAndUqTags:
-    # Aim: This tool takes in a coordinate-sorted SAM or BAM and calculatesthe NM, MD, and UQ tags by comparing with the reference.
-    # Use: picard.jar SetNmMdAndUqTags \
-    #       R=reference_sequence.fasta
-    #       I=sorted.bam \
-    #       O=fixed.bam
-    message:
-        "Picard SetNmMdAndUqTags"
-    conda:
-        PICARD
-    input:
-        bam = "results/02_Mapping/{sample}_{aligner}_sorted-mark-dup.bam",
-        ref = "resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
-    output:
-        fix = "results/02_Mapping/{sample}_{aligner}_sorted-mark-dup-fx.bam"
-    threads: CPUS
-    log:
-        "results/11_Reports/SetNmMdAndUqTags/{sample}_{aligner}_sorted-mark-dup-fx.log"
-    shell:
-        """
-        picard SetNmMdAndUqTags R={input.ref} I={input.bam} O={output.check} > {log} 2>&1 || true
-        """
 
 ###############################################################################
 rule mark_duplicates_spark:
     input:
-        "results/02_Mapping/{sample}_{aligner}_sorted.bam",
+        "results/02_Mapping/merged.bam",
     output:
-        bam = temp("results/02_Mapping/{sample}_{aligner}_sorted-mark-dup.bam"),
-        metrics="results/02_Mapping/{sample}_{aligner}_sorted-mark-dup_metrics.txt",
+        bam = "results/02_Mapping/merged-mark-dup.bam",
+        metrics="results/02_Mapping/merged-mark-dup_metrics.txt",
     log:
-        "results/11_Reports/samtools/{sample}_{aligner}_sorted-mark-dup.log",
+        "results/11_Reports/samtools/merged_picard-mark-dup.log",
     params:
         extra="--remove-sequencing-duplicates",  # optional
         java_opts="",  # optional
@@ -666,7 +625,49 @@ rule mark_duplicates_spark:
         mem_mb=16000,
     threads: CPUS
     wrapper:
-        "v1.21.2/bio/gatk/markduplicatesspark"
+        "v1.19.1/bio/gatk/markduplicatesspark"
+
+###############################################################################
+rule merge_bams:
+    input:
+        expand("results/02_Mapping/bams/{sample}_{aligner}_sorted.bam", sample=SAMPLE, aligner=ALIGNER),
+    output:
+        "results/02_Mapping/merged.bam",
+    log:
+        "results/11_Reports/logs/picard/mergesamfiles.log",
+    params:
+        extra="--VALIDATION_STRINGENCY LENIENT",
+    # optional specification of memory usage of the JVM that snakemake will respect with global
+    # resource restrictions (https://snakemake.readthedocs.io/en/latest/snakefiles/rules.html#resources)
+    # and which can be used to request RAM during cluster job submission as `{resources.mem_mb}`:
+    # https://snakemake.readthedocs.io/en/latest/executing/cluster.html#job-properties
+    resources:
+        mem_mb=16000,
+    wrapper:
+        "v1.21.1/bio/picard/mergesamfiles"
+
+###############################################################################
+rule samtools_index:
+    # Aim: indexing marked as duplicate BAM file for callable_loci rule
+    # Use: samtools index -@ [THREADS] -b [MARKDUP.bam] [INDEX.bai] # -b: Generate BAI-format index for BAM files (default)
+    message:
+        "SamTools indexing realigned fixed BAM file for Picard ValidateSamFile"
+    conda:
+        SAMTOOLS
+    resources:
+       cpus = CPUS
+    input:
+        bam = "results/02_Mapping/{sample}_{aligner}_sorted.bam"
+    output:
+        index = "results/02_Mapping/{sample}_{aligner}_sorted.bai"
+    log:
+        "results/11_Reports/samtools/{sample}_{aligner}_sorted_index.log"
+    threads: 
+        CPUS
+    shell:
+        """
+        samtools index -@ {resources.cpus} -b {input.bam} {output.index} &> {log}
+        """
 
 ###############################################################################
 rule samtools_sort:
@@ -706,7 +707,7 @@ rule samtools_view:
     input:
         "results/02_Mapping/{sample}_{aligner}-mapped.sam",
     output:
-        bam = temp("results/02_Mapping/{sample}_{aligner}.bam"),
+        bam="results/02_Mapping/bams/{sample}_{aligner}.bam",
     log:
         "results/11_Reports/samtools_view/{sample}_{aligner}.log",
     params:
@@ -714,7 +715,7 @@ rule samtools_view:
         region="",  # optional region string
     threads: CPUS
     wrapper:
-        "v1.21.2/bio/samtools/view"
+        "v1.21.1/bio/samtools/view"
 
 ###############################################################################
 rule bwa_mapping:

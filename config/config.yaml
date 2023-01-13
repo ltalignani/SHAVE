@@ -67,18 +67,20 @@ markdup: "picard" # # Select your favorite Mark Duplicate Program (default: 'pic
 ## 'picard'     # Picard MarkDuplicateSpark (default)
 ## 'samtools'   # samtools markdup
 
+### REFERENCE ----------------------------------------------------------------------------------------
+path: "resources/genomes/" # Path to genomes references
+reference: "GCA_018104305.1_AalbF3_genomic.fasta" # Your reference, in fasta format
+## Available options:
+## 'GCA_018104305.1_AalbF3_genomic.fna'                       # AalbF3 (default)
+## 'Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa'             # AgamP4
+species: "Aedes albopictus"
+## Available options:
+## "Aedes albopictus"
+## "Anopheles gambiae"
+
 ### CONSENSUS ----------------------------------------------------------------------------------------
 consensus:
-  reference: "GCA_018104305.1_AalbF3_genomic.fasta" # Your reference, in fasta format
-  ## Available options:
-  ## 'GCA_018104305.1_AalbF3_genomic.fna'                       # AalbF3 (default)
-  ## 'GCF_006496715.1_Aalbo_primary.1_genomic.fna'              # AaloF2
-  ## 'PEST'                                                     # AgamP4
-  species: "Aedes albopictus"
-  ## Available options:
-  ## "Aedes albopictus"
-  ## "Anopheles gambiae"
-  path: "resources/genomes/" # Path to genomes references
+  
   mincov: 10 # Minimum coverage, mask lower regions with 'N' (default: '10') [INT]
   minaf: 0.1 # Minimum allele frequency allowed (default: '0.1') [FLOAT]
   iupac: "" # Output variants in the form of IUPAC ambiguity codes (default: deactivate)
