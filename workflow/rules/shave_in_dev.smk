@@ -429,7 +429,7 @@ rule awk_intervals_for_IGV:
     params:
         cmd = r"""'BEGIN { OFS = "\t" } { if( $3 == "") { print $1, $2-1, $2 } else { print $1, $2-1, $3}}'"""
     output:
-        bed = "results/04_Polishing/{sample}_{aligner}_realignertargetcreator.bed"
+        bed = "results/04_Polishing/IGV/{sample}_{aligner}_realignertargetcreator.bed"
     log:
         "results/11_Reports/awk/{sample}_{aligner}_intervals_for_IGV.log"
     threads: 
@@ -601,7 +601,8 @@ rule bwa_mapping:
     resources:
         cpus = CPUS
     params:
-        ref = REFPATH+REFERENCE,
+        bwapath = BWAPATH,
+        reference = REFERENCE,
         extra = r"-R '@RG\tID:{sample}\tSM:{sample}\tCN:SC\tPL:ILLUMINA'" # Manage ReadGroup
     input:
         fwdreads = "results/01_Trimming/sickle/{sample}_sickle-trimmed_R1.fastq.gz",
@@ -618,8 +619,8 @@ rule bwa_mapping:
         "-T 0 "                                                     # Don’t output alignment with score lower than INT. This option only affects output.
         "-t {resources.cpus} "                                      # -t: Number of threads (default: 12)
         "-v 1 "                                                     # -v: Verbosity level: 1=error, 2=warning, 3=message, 4+=debugging
-        "{params.extra} "                                           # -R: Complete read group header line.
-        "{params.ref} "                                             # Reference genome
+        "{params.extra} "                                           #
+        "{params.bwapath}{params.reference} "                       # Reference index filename prefix
         "{input.fwdreads} "                                         # Forward input reads
         "{input.revreads} "                                         # Reverse input reads
         "1> {output.mapped} "                                       # SAM output
@@ -661,7 +662,34 @@ rule bowtie2_mapping:
         "2> {log}"                     # Log redirection
 
 ###############################################################################
-
+rule trimmomatic_pe:
+    input:
+        r1="resources/reads/{sample}_R1.fastq.gz",
+        r2="resources/reads/{sample}_R2.fastq.gz"
+    output:
+        r1="results/01_Trimming/trimmomatic/{sample}_trimmomatic-trimmed_R1.fastq.gz",
+        r2="results/01_Trimming/trimmomatic/{sample}_trimmomatic-trimmed_R2.fastq.gz",
+        # reads where trimming entirely removed the mate
+        r1_unpaired="results/01_Trimming/trimmomatic/{sample}.1.unpaired.fastq.gz",
+        r2_unpaired="results/01_Trimming/trimmomatic/{sample}.2.unpaired.fastq.gz"
+    log:
+        "results/11_Reports/trimmomatic/{sample}.log"
+    params:
+        # list of trimmers (see manual)
+        trimmer=["TRAILING:3"],
+        # optional parameters
+        extra="",
+        compression_level="-9"
+    threads:
+        CPUS
+    # optional specification of memory usage of the JVM that snakemake will respect with global
+    # resource restrictions (https://snakemake.readthedocs.io/en/latest/snakefiles/rules.html#resources)
+    # and which can be used to request RAM during cluster job submission as `{resources.mem_mb}`:
+    # https://snakemake.readthedocs.io/en/latest/executing/cluster.html#job-properties
+    resources:
+        mem_mb=16000
+    wrapper:
+        "v1.21.2/bio/trimmomatic/pe"
 
 ###############################################################################
 rule sickle_trim_quality:
