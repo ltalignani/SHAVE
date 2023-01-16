@@ -109,7 +109,7 @@ rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
-        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
+        qualimap = "results/00_Quality_Control/qualimap/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
         bgzip_vcfs = expand("results/05_Variants/{sample}_{aligner}.vcf.gz", sample=SAMPLE, aligner=ALIGNER),
         vcf = expand("results/05_Variants/{sample}_{aligner}.vcf", sample=SAMPLE, aligner=ALIGNER),
@@ -133,7 +133,7 @@ rule multiqc_reports_aggregation:
     input:
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
-        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
+        qualimap = "results/00_Quality_Control/qualimap/",
     output:
         multiqc = directory("results/00_Quality_Control/multiqc/")
     log:
@@ -499,7 +499,7 @@ rule samtools_index_markdup:
 
 ###############################################################################
 rule SetNmMdAndUqTags:
-    # Aim: This tool takes in a coordinate-sorted SAM or BAM and calculatesthe NM, MD, and UQ tags by comparing with the reference.
+    # Aim: This tool takes in a coordinate-sorted SAM or BAM and calculates the NM, MD, and UQ tags by comparing with the reference.
     # Use: picard.jar SetNmMdAndUqTags \
     #       R=reference_sequence.fasta
     #       I=sorted.bam \
@@ -516,6 +516,8 @@ rule SetNmMdAndUqTags:
     threads: CPUS
     log:
         "results/11_Reports/SetNmMdAndUqTags/{sample}_{aligner}_sorted-mark-dup-fx.log"
+    benchmark:
+        "benchmarks/setnmmdanduqtags/{sample}_{aligner}.tsv"
     shell:
         """
         picard SetNmMdAndUqTags R={input.ref} I={input.bam} O={output.fix} > {log} 2>&1 || true
@@ -528,6 +530,8 @@ rule mark_duplicates_spark:
     output:
         bam = temp("results/02_Mapping/{sample}_{aligner}_sorted-mark-dup.bam"),
         metrics="results/02_Mapping/{sample}_{aligner}_sorted-mark-dup_metrics.txt",
+    benchmark:
+        "benchmarks/markduplicatesspark/{sample}_{aligner}.tsv"
     log:
         "results/11_Reports/samtools/{sample}_{aligner}_sorted-mark-dup.log",
     params:

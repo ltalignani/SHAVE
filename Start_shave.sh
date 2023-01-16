@@ -363,19 +363,6 @@ echo ""
 # and copy multiqc_report.html to results/ dir root
 cp ${workdir}/results/00_Quality_Control/multiqc/multiqc_report.html ${workdir}/results/All_readsQC_reports.html
 
-###### Concatenate all coverage stats ######
-echo ""
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo -e "${blue}###########${nc} ${red}CONCATENATE COVERAGE STATS${nc} ${blue}##########${nc}"
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo ""
-
-cat ${workdir}/results/03_Coverage/*coverage-stats.tsv > ${workdir}/results/All_genome_coverages.tsv
-
-awk "NR==1 || NR%2==0" ${workdir}/results/All_genome_coverages.tsv > ${workdir}/results/GENCOV.tmp \
-    && mv ${workdir}/results/GENCOV.tmp ${workdir}/results/All_genome_coverages.tsv
-
-
 ###### End managment ######
 echo ""
 echo -e "${blue}------------------------------------------------------------------------${nc}"
