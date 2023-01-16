@@ -65,14 +65,16 @@ aligner: "bwa" # Select your favorite aligner (default: 'bwa')
 markdup: "picard" # # Select your favorite Mark Duplicate Program (default: 'picard')
 ## Available options:
 ## 'picard'     # Picard MarkDuplicateSpark (default)
-## 'samtools'   # samtools markdup
 
 ### REFERENCE ----------------------------------------------------------------------------------------
 path: "resources/genomes/" # Path to genomes references
-reference: "GCA_018104305.1_AalbF3_genomic.fasta" # Your reference, in fasta format
+reference: "Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa" # Your reference, in fasta format
+index: "Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa.fai"
+dictionary: "Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.dict" 
 ## Available options:
-## 'GCA_018104305.1_AalbF3_genomic.fna'                       # AalbF3 (default)
-## 'Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa'             # AgamP4
+## 'GCA_018104305.1_AalbF3_genomic.fasta'                       # AalbF3
+## 'Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa'               # AgamP4
+
 species: "Aedes albopictus"
 ## Available options:
 ## "Aedes albopictus"
@@ -80,7 +82,6 @@ species: "Aedes albopictus"
 
 ### CONSENSUS ----------------------------------------------------------------------------------------
 consensus:
-  
   mincov: 10 # Minimum coverage, mask lower regions with 'N' (default: '10') [INT]
   minaf: 0.1 # Minimum allele frequency allowed (default: '0.1') [FLOAT]
   iupac: "" # Output variants in the form of IUPAC ambiguity codes (default: deactivate)
