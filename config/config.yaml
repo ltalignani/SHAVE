@@ -70,7 +70,7 @@ markdup: "picard" # # Select your favorite Mark Duplicate Program (default: 'pic
 path: "resources/genomes/" # Path to genomes references
 reference: "Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa" # Your reference, in fasta format
 index: "Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa.fai"
-dictionary: "Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.dict" 
+dictionary: "Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.dict"
 ## Available options:
 ## 'GCA_018104305.1_AalbF3_genomic.fasta'                       # AalbF3
 ## 'Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa'               # AgamP4
@@ -107,6 +107,25 @@ bowtie2:
   ## '--sensitive'      # Same as options: -D 15 -R 2 -N 0 -L 22 -i S,1,1.15
   ## '--very-sensitive' # Same as options: -D 20 -R 3 -N 0 -L 20 -i S,1,0.50 (default)
 
+### TRIMMOMATIC --------------------------------------------------------------------------------------
+trimmomatic:
+  adapters:
+    nextera: "resources/adapters/NexteraPE-PE.fa"
+    truseq2-pe: "resources/adapters/TruSeq2-PE.fa"
+    truseq2-se: "resources/adapters/TruSeq2-SE.fa"
+    truseq3-pe: "resources/adapters/TruSeq3-PE.fa"
+    truseq3-pe-2: "resources/adapters/TruSeq3-PE-2.fa"
+    truseq3-se: "resources/adapters/TruSeq3-SE.fa"
+  seedMisMatches: "2"
+  palindromeClipTreshold: "30"
+  simpleClipThreshold: "10"
+  LeadMinTrimQual: "3"
+  TrailMinTrimQual: "3"
+  windowSize: "4"
+  avgMinQual: "15"
+  minReadLength: "40"
+  phred: "-phred64"
+
 ### SICKLE-TRIM --------------------------------------------------------------------------------------
 sickle-trim:
   command: "pe" # Reading (default and should be 'pe' for paired-end sequences)
@@ -122,7 +141,7 @@ sickle-trim:
 cutadapt:
   length: "50" # Discard reads shorter than 'length' after trim (default: '50')
   kits: # Sequence of an adapter ligated to the 3' end of the first read
-    truseq: "AGATCGGAAGAGC" # Illumina "TruSeq" or "ScriptSeq" based libraries kits
+    truseq: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA" # Illumina "TruSeq" or "ScriptSeq" based libraries kits
     nextera: "CTGTCTCTTATACACATC" # Illumina "Nextera" or "TruSight" based libraries kits
     small: "TGGAATTCTCGGGTGCCAAGG" # Illumina "Small" based libraries kits
 

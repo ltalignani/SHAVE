@@ -5,9 +5,9 @@
 # Aim:                  Snakefile for SHort-read Alignment pipeline for VEctor 
 # Date:                 2022.10.05
 # Run:                  snakemake --snakefile workflow/rules/shave.smk --cores X --use-conda
-# Latest modification:  2022.11.23
+# Latest modification:  2023.01.16
 # Done:                 Added RealignerTargetCreator, IndelRealigner, 
-#                       UnifiedGenotyper, VariantFiltration, compression and tabix
+#                       UnifiedGenotyper, compression
 
 ###############################################################################
 # PUBLICATIONS #
@@ -109,8 +109,12 @@ rule all:
     input:
         multiqc = "results/00_Quality_Control/multiqc/",
         fastqc = "results/00_Quality_Control/fastqc/",
-        qualimap = "results/00_Quality_Control/qualimap/",
+        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}.qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
+        indexvcf = expand("results/05_Variants/{sample}_{aligner}.vcf.gz.tbi", sample=SAMPLE, aligner=ALIGNER),
+        vcf_filtered ="results/05_Variants/merged_filtered/merged_hardfiltered.vcf.gz",
+        table = "results/05_Variants/merged_raw/merged.table",
+        combinegvcfs = "results/05_Variants/merged_raw/merged.vcf.gz",
         bgzip_vcfs = expand("results/05_Variants/{sample}_{aligner}.vcf.gz", sample=SAMPLE, aligner=ALIGNER),
         vcf = expand("results/05_Variants/{sample}_{aligner}.vcf", sample=SAMPLE, aligner=ALIGNER),
         check = expand("results/00_Quality_Control/validatesamfile/{sample}_{aligner}_md_realigned_fixed_ValidateSam.txt", sample=SAMPLE, aligner=ALIGNER),
@@ -133,7 +137,7 @@ rule multiqc_reports_aggregation:
     input:
         fastqc = "results/00_Quality_Control/fastqc/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
-        qualimap = "results/00_Quality_Control/qualimap/",
+        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}.qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
     output:
         multiqc = directory("results/00_Quality_Control/multiqc/")
     log:
@@ -147,6 +151,93 @@ rule multiqc_reports_aggregation:
         "{input.qualimap} "          # Input Qualimap
         "--no-ansi "                 # Disable coloured log
         "&> {log}"                   # Log redirection
+
+###############################################################################
+rule gatk_filter:
+    # Aim: Filter variant calls based on INFO and/or FORMAT annotations.
+    # Use: gatk VariantFiltration \
+    # -R reference.fasta \
+    # -V input.vcf.gz \
+    # -O output.vcf.gz
+    # --filter-name "my_filter1" \
+    # --filter-expression "AB < 0.2" \
+    # --filter-name "my_filter2" \
+    # --filter-expression "MQ0 > 50"
+    message:
+        "VariantFiltration Hard-filtering"
+    input:
+        ref=REFPATH+REFERENCE,  #"resources/genomes/GCA_018104305.1_AalbF3_genomic.fasta",
+        vcf="results/05_Variants/merged_raw/merged.vcf.gz",
+    output:
+        vcf="results/05_Variants/merged_filtered/merged_hardfiltered.vcf.gz",
+    params:
+        filters={"myfilter": "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"},
+        extra="",
+        java_opts="",
+    resources:
+        mem_mb=16000
+    log:
+        "results/11_Reports/variantfiltration/merged_hardfiltered.log",
+    wrapper:
+        "v1.21.2/bio/gatk/variantfiltration"
+
+###############################################################################
+rule variantstotable:
+    # Aim:  Call variants in sequence data. The following parameters comes from the MalariaGEN
+    # Use:  gatk VariantsToTable\ 
+    #       -V input.vcf \
+    #       -F CHROM -F POS -F TYPE -GF AD \
+    #       -O output.table
+    message:
+        "VariantsToTable"
+    conda:
+        GATK4
+    input:
+        vcf = "results/05_Variants/merged_raw/merged.vcf.gz",
+    output:
+        table = "results/05_Variants/merged_raw/merged.table",
+    log:
+        "results/11_Reports/variantstotable/merged_table.log",
+    shell:
+        """
+        gatk VariantsToTable -V {input.vcf} -O {output.table} -F CHROM -F POS -F QUAL -F NS -F DP -F MQ -F FS -F SOR -F MQRankSum -F ReadPosRankSum -GF AD 2> {log}
+        """
+
+###############################################################################
+rule combinegvcfs:
+    message:
+        "GATK CombineGVCFs merge VCFs"
+    input:
+        gvcfs=expand("results/05_Variants/{sample}_{aligner}.vcf.gz", sample=SAMPLE, aligner=ALIGNER),
+        ref=REFPATH+REFERENCE,
+    output:
+        gvcf="results/05_Variants/merged_raw/merged.vcf.gz",
+    log:
+        "results/11_Reports/combinegvcfs/combinegvcfs.log",
+    params:
+        extra="",  # optional
+        java_opts="",  # optional
+    resources:
+        mem_mb=16000,
+    wrapper:
+        "v1.21.2/bio/gatk/combinegvcfs"
+
+###############################################################################
+rule indexfeaturefile:
+    message:
+        "Indexing VCFs file for CombineGVCFs"
+    conda:
+        GATK4
+    input:
+        vcf ="results/05_Variants/{sample}_{aligner}.vcf.gz",
+    output:
+        indexvcf = "results/05_Variants/{sample}_{aligner}.vcf.gz.tbi",
+    log:
+        "results/11_Reports/indexfeaturefile/{sample}_{aligner}.indexvcf.tbi.log",
+    shell:
+        """
+        gatk IndexFeatureFile -I {input.vcf} -O {output.indexvcf} > {log} 2>&1 || true
+        """
 
 ###############################################################################
 rule bgzip_vcfs:
@@ -220,6 +311,7 @@ rule unifiedgenotyper:
         "-XA MappingQualityRankSumTest "                #
         "-XA QualByDepth "                              #
         "-XA ReadPosRankSumTest "                       #
+        " > {log} 2>&1"
 
 ###############################################################################
 rule samtools_flagstat:
@@ -316,7 +408,7 @@ rule qualimap:
     input:
         bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam"
     output:
-        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html"),
+        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}.qualimapReport.html"),
         protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/genome_fraction_coverage.txt"),
         protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt"),
         protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/genome_results.txt"),
@@ -665,9 +757,6 @@ rule bowtie2_mapping:
         "2> {log}"                     # Log redirection
 
 ###############################################################################
-
-
-###############################################################################
 rule sickle_trim_quality:
     # Aim: windowed adaptive trimming tool for FASTQ files using quality
     # Use: sickle [COMMAND] [OPTIONS]
@@ -729,7 +818,7 @@ rule cutadapt_adapters_removing:
         "results/11_Reports/cutadapt/{sample}.log"
     shell:
        "cutadapt "                           # Cutadapt, finds and removes unwanted sequence from your HT-seq reads
-        "--cores {resources.cpus} "          # -j: Number of CPU cores to use. Use 0 to auto-detect (default: 1)
+        "-j {resources.cpus} "               # -j: Number of CPU cores to use. Use 0 to auto-detect (default: 1)
         "--trim-n "                          # --trim-n: Trim N's on ends of reads
         "--minimum-length {params.length} "  # -m: Discard reads shorter than length
         "--adapter {params.truseq} "         # -a: Sequence of an adapter ligated to the 3' end of the first read
