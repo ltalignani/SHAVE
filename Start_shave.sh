@@ -277,7 +277,7 @@ snakemake \
     --rerun-incomplete \
     --use-conda \
     --conda-frontend conda \
-    --prioritize multiqc_reports_aggregation \
+    --prioritize multiqc \
     --dry-run \
     --quiet
 
@@ -302,9 +302,10 @@ snakemake \
     --config os=${os} \
     --rerun-incomplete \
     --keep-going \
+    --latency-wait 120 \
     --use-conda \
     --conda-frontend conda \
-    --prioritize multiqc_reports_aggregation \
+    --prioritize multiqc \
     --printshellcmds
 
 
@@ -362,7 +363,7 @@ echo -e "${blue}----------------------------------------------------------------
 echo ""
 
 # and copy multiqc_report.html to results/ dir root
-cp ${workdir}/results/00_Quality_Control/multiqc/multiqc_report.html ${workdir}/results/All_readsQC_reports.html
+cp ${workdir}/results/00_Quality_Control/MULTIQC/multiqc_report.html ${workdir}/results/multiQC_reports.html
 
 ###### End managment ######
 echo ""
@@ -370,6 +371,8 @@ echo -e "${blue}----------------------------------------------------------------
 echo -e "${blue}##################${nc} ${red}SCRIPT END${nc} ${blue}###################${nc}"
 echo -e "${blue}------------------------------------------------------------------------${nc}"
 echo ""
+
+echo -e "${red}Removing empty files${nc}"
 
 find ${workdir}/results/ -type f -empty -delete                 # Remove empty file (like empty log)
 find ${workdir}/results/ -type d -empty -delete                 # Remove empty directory

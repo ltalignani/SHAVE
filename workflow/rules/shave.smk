@@ -36,7 +36,7 @@ TMPDIR = config["resources"]["tmpdir"] # Temporary directory
 # ENVIRONMENTS #
 FASTQC = config["conda"][OS]["fastqc"]              # FastQC
 FASTQSCREEN = config["conda"][OS]["fastq-screen"]   # Fastq-Screen
-MULTIQC = config["conda"][OS]["multiqc"]            # MultiQC
+MULTIQC = config["conda"][OS]["multiqc"]            # MultiQC 1.14
 CUTADAPT = config["conda"][OS]["cutadapt"]          # Cutadapt
 SICKLETRIM = config["conda"][OS]["sickle-trim"]     # Sickle-trim
 BOWTIE2 = config["conda"][OS]["bowtie2"]            # Bowtie2
@@ -45,11 +45,10 @@ SAMTOOLS = config["conda"][OS]["samtools"]          # SamTools
 BEDTOOLS = config["conda"][OS]["bedtools"]          # BedTools
 BCFTOOLS = config["conda"][OS]["bcftools"]          # BcfTools
 GAWK = config["conda"][OS]["gawk"]                  # Gawk
-LOFREQ = config["conda"][OS]["lofreq"]              # LoFreq
-GATK = config["conda"][OS]["gatk"]                  # GATK 3.8
+GATK = config["conda"][OS]["gatk"]                  # GATK 3.6
 GATK4 = config["conda"][OS]["gatk4"]                # GATK 4.3.0
-PICARD = config["conda"][OS]["picard"]              # Picard 2.24.7
-QUALIMAP = config["conda"][OS]["qualimap"]          # Qualimap 2.2.2d
+PICARD = config["conda"][OS]["picard"]              # Picard 2.27.5
+QUALIMAP = config["conda"][OS]["qualimap"]          # Qualimap 2.2.0
 
 ###############################################################################
 # PARAMETERS #
@@ -107,9 +106,10 @@ onsuccess:
 ################################## A L L #####################################
 rule all:
     input:
-        multiqc = "results/00_Quality_Control/multiqc/",
+        multiqc = "results/00_Quality_Control/MULTIQC/multiqc_report.html",
         fastqc = "results/00_Quality_Control/fastqc/",
-        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}.qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
+        fastqc_af_clean = "results/00_Quality_Control/fastqc_af_clean/",
+        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
         indexvcf = expand("results/05_Variants/{sample}_{aligner}.vcf.gz.tbi", sample=SAMPLE, aligner=ALIGNER),
         vcf_filtered ="results/05_Variants/merged_filtered/merged_hardfiltered.vcf.gz",
@@ -118,8 +118,8 @@ rule all:
         bgzip_vcfs = expand("results/05_Variants/{sample}_{aligner}.vcf.gz", sample=SAMPLE, aligner=ALIGNER),
         vcf = expand("results/05_Variants/{sample}_{aligner}.vcf", sample=SAMPLE, aligner=ALIGNER),
         check = expand("results/00_Quality_Control/validatesamfile/{sample}_{aligner}_md_realigned_fixed_ValidateSam.txt", sample=SAMPLE, aligner=ALIGNER),
-        flagstat = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_bam.flagstat", sample=ALIGNER, aligner=ALIGNER),
-        idxstats = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed.idxstats", sample=SAMPLE, aligner=ALIGNER),
+        flagstat = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_bam.flagstat.txt", sample=ALIGNER, aligner=ALIGNER),
+        idxstats = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed.idxstats.txt", sample=SAMPLE, aligner=ALIGNER),
         stats = expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_stats.txt", sample=SAMPLE, aligner=ALIGNER),        
         igv_output = expand("results/04_Polishing/{sample}_{aligner}_realignertargetcreator.bed", sample=SAMPLE, aligner=ALIGNER),
         index_post_realign = expand("results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai", sample=SAMPLE, aligner=ALIGNER),
@@ -136,21 +136,40 @@ rule multiqc_reports_aggregation:
         MULTIQC
     input:
         fastqc = "results/00_Quality_Control/fastqc/",
+        fastqc_af_clean = "results/00_Quality_Control/fastqc_af_clean/",
         fastqscreen = "results/00_Quality_Control/fastq-screen/",
-        qualimap = expand("results/00_Quality_Control/qualimap/{sample}_{aligner}.qualimapReport.html", sample=SAMPLE, aligner=ALIGNER),
+        qualimap = "results/00_Quality_Control/qualimap/multisampleBamQcReport.html",
     output:
-        multiqc = directory("results/00_Quality_Control/multiqc/")
+        multiqc = directory("results/00_Quality_Control/multiqc_old/")
     log:
-        "results/11_Reports/quality/multiqc.log"
+        "results/11_Reports/multiqc/multiqc_old.log"
     shell:
         "multiqc "                  # Multiqc, searches in given directories for analysis & compiles a HTML report
-        "--quiet "                   # -q: Only show log warning
         "--outdir {output.multiqc} " # -o: Create report in the specified output directory
         "{input.fastqc} "            # Input FastQC files
         "{input.fastqscreen} "       # Input Fastq-Screen
         "{input.qualimap} "          # Input Qualimap
         "--no-ansi "                 # Disable coloured log
         "&> {log}"                   # Log redirection
+
+################################ R U L E S ####################################
+rule multiqc:
+    input:
+        expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_bam.flagstat.txt", sample=SAMPLE, aligner=ALIGNER),
+        expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed.idxstats.txt", sample=SAMPLE, aligner=ALIGNER),
+        expand("results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_stats.txt", sample=SAMPLE, aligner=ALIGNER),
+        expand("results/02_Mapping/{sample}_{aligner}_sorted-mark-dup_metrics.txt", sample=SAMPLE, aligner=ALIGNER),
+        "results/00_Quality_Control/fastqc/",
+        "results/00_Quality_Control/fastqc_af_clean/",
+        "results/00_Quality_Control/fastq-screen/",
+    output:
+        "results/00_Quality_Control/MULTIQC/multiqc_report.html"
+    params:
+        extra=""  # Optional: extra parameters for multiqc.
+    log:
+        "results/11_Reports/multiqc/multiqc.log"
+    wrapper:
+        "v1.21.2/bio/multiqc"
 
 ###############################################################################
 rule gatk_filter:
@@ -255,7 +274,7 @@ rule bgzip_vcfs:
 
 ###############################################################################
 rule unifiedgenotyper:
-    # Aim:  Call variants in sequence data. The following parameters comes from the MalariaGEN
+    # Aim:  Call variants in sequence data. The following parameters comes from the MalariaGEN. There is two difference w/ the 2017's article: --output_mode EMIT_VARIANTS_ONLY &  --genotyping_mode DISCOVERY
     # Use:  java -jar GenomeAnalysisTK.jar \ 
     #       -T UnifiedGenotyper \
     #       -nct {threads.cpus} \ # -nt / --num_threads controls the number of data threads sent to the processor 
@@ -263,6 +282,10 @@ rule unifiedgenotyper:
     #       --alleles {alleles VCF} \ : This option has been removed for the moment.  Alleles against which to genotype (VCF format). Given the sites VCF file is fixed for every sample, and we wish to generalise to future sets of sites/alleles, the VCF file describing sites and alleles should be considered a parameter. This file for A. gambiae (AgamP4) is available at
     #       -R {reference sequence} \
     #       --out {output VCF} \
+    #       -A: Annotation \
+    #       -XA: eXclude Annotation
+    #
+    #       Annotations needed as decision tools: see https://gatk.broadinstitute.org/hc/en-us/articles/360035890471-Hard-filtering-germline-short-variants
     message:
         "UnifiedGenotyper calling SNVs"
     conda:
@@ -270,7 +293,8 @@ rule unifiedgenotyper:
     input:
         bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam",
         ref = "resources/genomes/Anopheles-gambiae-PEST_CHROMOSOMES_AgamP4.fa",
-        index = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai"
+        index = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai",
+        intervals = "/Users/loictalignani/snakemake-models/shave/resources/genomes/chrom_list.intervals",
         #alleles = ALLELES
     output:
         vcf="results/05_Variants/{sample}_{aligner}.vcf"
@@ -284,33 +308,33 @@ rule unifiedgenotyper:
         "-nct {threads} "                               # -nct / --num_cpu_threads_per_data_thread controls the number of CPU threads allocated to each data thread
         "-I {input.bam} "                               # Input indel realigned BAM file
         "-R {input.ref} "                               # Reference sequence in fasta format
+        "-L {input.intervals} "                         # interval list (chromosome names)
         "--out {output.vcf} "                           # Output VCF
         "--genotype_likelihoods_model BOTH "            # Genotype likelihoods calculation model to employ -- BOTH is the default option, while INDEL is also available for calling indels and SNP is available for calling SNPs only (SNP|INDEL|BOTH)
-        "--genotyping_mode GENOTYPE_GIVEN_ALLELES "     # Should we output confident genotypes (i.e. including ref calls) or just the variants? (DISCOVERY|GENOTYPE_GIVEN_ALLELES)
-        "--heterozygosity 0.015 "                       # Heterozygosity value used to compute prior likelihoods for any locus
-        "--heterozygosity_stdev 0.05 "                  # Standard deviation of heterozygosity for SNP and indel calling
+        "--genotyping_mode GENOTYPE_GIVEN_ALLELES "                  # Should we output confident genotypes (i.e. including ref calls) or just the variants? (DISCOVERY|GENOTYPE_GIVEN_ALLELES)
+        "--heterozygosity 0.01 "                        # Heterozygosity value used to compute prior likelihoods for any locus
         "--indel_heterozygosity 0.001 "                 # Heterozygosity for indel calling
-        "--downsampling_type BY_SAMPLE "                # Type of reads downsampling to employ at a given locus. Reads will be selected randomly to be removed from thepile based on the method described here (NONE|ALL_READS| BY_SAMPLE) given locus
+        "--downsampling_type BY_SAMPLE "                # Type of reads downsampling to employ at a given locus. Reads will be selected randomly to be removed from the pile based on the method described here (NONE|ALL_READS| BY_SAMPLE) given locus
         "-dcov 250 "                                    # downsampling coverage
         "--output_mode EMIT_ALL_SITES "                 # Should we output confident genotypes (i.e. including ref calls) or just the variants? (EMIT_VARIANTS_ONLY|EMIT_ALL_CONFIDENT_SITES|EMIT_ALL_SITES)
         "--min_base_quality_score 17 "                  # Minimum base quality required to consider a base for calling
-        "-stand_call_conf 0.0 "                         # standard min confidence-threshold for calling
-        "-contamination 0.0 "                           # Define the fraction of contamination in sequence data (for all samples) to aggressively remove.
+        "-stand_call_conf 30.0 "                        # standard min confidence-threshold for calling. This is the minimum confidence threshold (phred-scaled) at which the program should emit variant sites as called.
+        "-contamination 0.05 "                          # Define the fraction of contamination in sequence data (for all samples) to aggressively remove.
         "-A DepthPerAlleleBySample "                    # 
-        "-XA RMSMappingQuality "                        # 
-        "-XA Coverage "                                 #
-        "-XA ExcessHet "                                #
+        "-A RMSMappingQuality "                         # MQ: needed as decision tools for hard-filtering. Compares the mapping qualities of the reads supporting the reference allele and the alternate allele. positive value means the mapping qualities of the reads supporting the alternate allele are higher than those supporting the reference allele
+        "-A Coverage "                                  # 
+        "-A FisherStrand "                              # FS: needed as decision tools for hard-filtering. Strand Bias tells us whether the alternate allele was seen more or less often on the forward or reverse strand than the reference allele. measure strand bias (a type of sequencing bias in which one DNA strand is favored over the other, which can result in incorrect evaluation of the amount of evidence observed for one allele vs. the other
+        "-A StrandOddsRatio "                           # SOR: needed as decision tools for hard-filtering. created because FS tends to penalize variants that occur at the ends of exons. Reads at the ends of exons tend to only be covered by reads in one direction
+        "-A BaseQualityRankSumTest "                    #
+        "-A MappingQualityRankSumTest "                 # MQRankSum: needed as decision tools for hard-filtering
+        "-A QualByDepth "                               # QD: needed as decision tools for hard-filtering. Intended to normalize the variant quality in order to avoid inflation caused when there is deep coverage. This is the variant confidence (from the QUAL field) divided by the unfiltered depth of non-hom-ref samples. better to use QD than either QUAL or DP directly.
+        "-A ReadPosRankSumTest "                        # ReadPosRankSum: needed as decision tools for hard-filtering. z-approximation from the Rank Sum Test for site position within reads. Compares whether the positions of the reference and alternate alleles are different within the reads.
+        "-XA ExcessHet "                                # 
         "-XA InbreedingCoeff "                          #
         "-XA MappingQualityZero "                       #
         "-XA HaplotypeScore "                           #
         "-XA SpanningDeletions "                        #
-        "-XA FisherStrand "                             #
-        "-XA StrandOddsRatio "                          #
         "-XA ChromosomeCounts "                         #
-        "-XA BaseQualityRankSumTest "                   #
-        "-XA MappingQualityRankSumTest "                #
-        "-XA QualByDepth "                              #
-        "-XA ReadPosRankSumTest "                       #
         " > {log} 2>&1"
 
 ###############################################################################
@@ -318,7 +342,7 @@ rule samtools_flagstat:
     input:
         expand("results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam", sample=SAMPLE, aligner=ALIGNER),
     output:
-        "results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_bam.flagstat",
+        "results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed_bam.flagstat.txt",
     log:
         "results/11_Reports/samtools/flagstat/{sample}_{aligner}_realigned_fixed_bam.log",
     params:
@@ -338,7 +362,7 @@ rule samtools_idxstats:
         bam="results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam",
         idx="results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bai",
     output:
-        "results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed.idxstats",
+        "results/00_Quality_Control/realigned/{sample}_{aligner}_md_realigned_fixed.idxstats.txt",
     log:
         "results/11_Reports/samtools/idxstats/{sample}_{aligner}_realigned_fixed_idxstats.log",
     params:
@@ -406,21 +430,24 @@ rule qualimap:
     conda:
         QUALIMAP
     input:
-        bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam"
+        bam = "results/04_Polishing/realigned/{sample}_{aligner}_md_realigned_fixed.bam",
     output:
-        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}.qualimapReport.html"),
+        protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/qualimapReport.html"),
         protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/genome_fraction_coverage.txt"),
         protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt"),
         protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/genome_results.txt"),
         protected("results/00_Quality_Control/qualimap/{sample}_{aligner}/raw_data_qualimapReport/coverage_histogram.txt")
-    threads: CPUS
+    threads: CPUS,
+    resources:
+        mem_gb=8,
     log:
         stderr="results/11_Reports/qualimap/logs/{sample}_{aligner}_qualimap.stderr",
-        stdout="results/11_Reports/qualimap/logs/{sample}_{aligner}_qualimap.stdout"
+        stdout="results/11_Reports/qualimap/logs/{sample}_{aligner}_qualimap.stdout" #cp -r results/00_Quality_Control/qualimap/wildcards.sample}_{wildcards.aligner}/wildcards.sample}_{wildcards.aligner}_qualimapReport.html results/00_Quality_Control/qualimap/
     shell:
         """
-        qualimap bamqc -bam {input.bam} -c -nt {threads} -outdir results/00_Quality_Control/qualimap/{wildcards.sample}_{wildcards.aligner} -sd > {log.stdout} 2> {log.stderr}
+        qualimap bamqc -bam {input.bam} -c -nt {threads} --java-mem-size={resources.mem_gb}G -outdir results/00_Quality_Control/qualimap/{wildcards.sample}_{wildcards.aligner} -sd > {log.stdout} 2> {log.stderr}
         """
+
 
 ###############################################################################
 rule samtools_index_post_realign:
@@ -467,7 +494,7 @@ rule fixmateinformation:
         "results/11_Reports/fixmateinformation/{sample}_{aligner}_realigned_fixed.log"
     shell:
         """
-        picard FixMateInformation -I {input.realigned} -O {output.fixed} --ADD_MATE_CIGAR true
+        picard FixMateInformation -I {input.realigned} -O {output.fixed} --ADD_MATE_CIGAR true &> {log}
         """
 
 ###############################################################################
@@ -628,7 +655,7 @@ rule mark_duplicates_spark:
         "results/11_Reports/samtools/{sample}_{aligner}_sorted-mark-dup.log",
     params:
         extra="--remove-sequencing-duplicates",  # optional
-        java_opts="",  # optional
+        #java_opts=,  # optional
         #spark_runner="",  # optional, local by default
         #spark_v1.19.1="",  # optional
         #spark_extra="", # optional
@@ -756,6 +783,33 @@ rule bowtie2_mapping:
         "1> {output.mapped} "          # -S: File for SAM output (default: stdout)
         "2> {log}"                     # Log redirection
 
+
+##############################################################################
+rule fastqc_after_cleaning:
+    # Aim: reads sequence files and produces a quality control report
+    # Use: fastqc [OPTIONS] --output [DIR/] [SAMPLE_1.fastq] ... [SAMPLE_n.fastq]
+    message:
+        "FastQC reads quality controling after reads cleaning"
+    conda:
+        FASTQC
+    resources:
+        cpus = CPUS
+    input:
+        fastq = "results/01_Trimming/sickle/"#
+    output:
+        fastqc = directory("results/00_Quality_Control/fastqc_af_clean/")
+    log:
+        "results/11_Reports/quality/fastqc_af_clean.log"
+    shell:
+        "mkdir -p {output.fastqc} "     # (*) this directory must exist as the program will not create it
+        "2> /dev/null && "              # in silence and then...
+        "fastqc "                       # FastQC, a high throughput sequence QC analysis tool
+        "--quiet "                      # -q: Supress all progress messages on stdout and only report errors
+        "--threads {resources.cpus} "   # -t: Specifies files number which can be processed simultaneously
+        "--outdir {output.fastqc} "     # -o: Create all output files in the specified output directory (*)
+        "{input.fastq}/*.fastq.gz "     # Input file.fastq
+        "&> {log}"                      # Log redirection
+
 ###############################################################################
 rule sickle_trim_quality:
     # Aim: windowed adaptive trimming tool for FASTQ files using quality
@@ -864,7 +918,7 @@ rule fastqscreen_contamination_checking:
         "{input.fastq}/*.fastq.gz "      # Input file.fastq
         "&> {log}"                       # Log redirection
 
-###############################################################################
+##############################################################################
 rule fastqc_quality_control:
     # Aim: reads sequence files and produces a quality control report
     # Use: fastqc [OPTIONS] --output [DIR/] [SAMPLE_1.fastq] ... [SAMPLE_n.fastq]
@@ -875,7 +929,7 @@ rule fastqc_quality_control:
     resources:
         cpus = CPUS
     input:
-        fastq = "resources/reads/"
+        fastq = "resources/reads/"#
     output:
         fastqc = directory("results/00_Quality_Control/fastqc/")
     log:

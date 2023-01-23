@@ -30,13 +30,14 @@ conda:
     fastqc: "../envs/osx/fastqc-0.11.9.yaml" # FastQC       ver. 0.11.9
     gawk: "../envs/osx/gawk-5.1.0.yaml" # Awk          ver. 5.1.0
     lofreq: "../envs/osx/lofreq-2.1.5.yaml" # Lofreq       ver. 2.1.5
-    multiqc: "../envs/osx/multiqc-1.12.yaml" # MultiQC      ver. 1.12
-    qualimap: "../envs/osx/qualimap-2.2.2.yaml" # Qualimap    vers. 2.2.2d
+    multiqc: "../envs/osx/multiqc-1.14.yaml" # MultiQC      ver. 1.14
+    qualimap: "../envs/osx/qualimap-2.2.0.yaml" # Qualimap    vers. 2.2.0
     samtools: "../envs/osx/samtools-1.15.1.yaml" # Samtools     ver. 1.15.1
     sickle-trim: "../envs/osx/sickle-trim-1.33.yaml" # Sickle-trim  ver. 1.33
     gatk: "../envs/osx/gatk-3.8.yaml" # gatk ver. 3.8
     gatk4: "../envs/osx/gatk-4.3.0.0.yaml" # gatk ver. 4.0.5.1
-    picard: "../envs/osx/picard-2.27.4.yaml" # picard ver. 2.27.4
+    picard: "../envs/osx/picard-2.27.5.yaml" # picard ver. 2.27.5
+    trimmomatic: "../envs/osx/trimmomatic-0.39.yaml" # trimmomatic ver. 0.39
   Linux: # Conda Linux environement yaml files:
     bcftools: "../envs/linux/bcftools-1.15.1.yaml" # Bcftools     ver. 1.15.1
     bedtools: "../envs/linux/bedtools-2.30.0.yaml" # Bedtools     ver. 2.30.0
@@ -53,7 +54,8 @@ conda:
     sickle-trim: "../envs/linux/sickle-trim-1.33.yaml" # Sickle-trim  ver. 1.33
     gatk: "../envs/linux/gatk-3.8.yaml" # gatk ver. 3.8
     gatk4: "../envs/linux/gatk-4.3.0.0.yaml" # gatk ver. 4.0.5.1
-    picard: "../envs/linux/picard-2.27.4.yaml" # picard ver. 2.27.4
+    picard: "../envs/linux/picard-2.27.5.yaml" # picard ver. 2.27.5
+    trimmomatic: "../envs/linux/trimmomatic-0.39.yaml" # trimmomatic ver. 0.39
 
 ### ALIGNER ------------------------------------------------------------------------------------------
 aligner: "bwa" # Select your favorite aligner (default: 'bwa')
@@ -123,8 +125,8 @@ trimmomatic:
   TrailMinTrimQual: "3"
   windowSize: "4"
   avgMinQual: "15"
-  minReadLength: "40"
-  phred: "-phred64"
+  minReadLength: "50"
+  phred: "-phred33"
 
 ### SICKLE-TRIM --------------------------------------------------------------------------------------
 sickle-trim:

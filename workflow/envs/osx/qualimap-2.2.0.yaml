@@ -1,0 +1,10 @@
+name: qualimap-2.2.0
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - java-jdk=8.0.112=1
+  - openjdk=8.0.112=zulu8.19.0.1_3
+  - qualimap=2.2=0
+prefix: /Users/loictalignani/miniconda3/envs/qualimap-2.2.0
