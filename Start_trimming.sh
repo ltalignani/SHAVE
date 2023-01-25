@@ -20,12 +20,12 @@ echo -e "${green}---------------------------------------------------------------
 echo -e "${green}#####${nc} ${red}ABOUT${nc} ${green}#####${nc}"
 echo -e "${green}-----------------${nc}"
 echo ""
-echo -e "${blue}Name${nc} __________________ Start_shave.sh"
+echo -e "${blue}Name${nc} __________________ Start_trimming.sh"
 echo -e "${blue}Author${nc} ________________ Loïc Talignani"
 echo -e "${blue}Affiliation${nc} ___________ UMR_MIVEGEC"
 echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment pipeline for ${red}VE${nc}ctors v.1"
-echo -e "${blue}Date${nc} __________________ 2022.10.05"
-echo -e "${blue}Run${nc} ___________________ bash Start_shave.sh"
+echo -e "${blue}Date${nc} __________________ 2023.01.25"
+echo -e "${blue}Run${nc} ___________________ bash Start_trimming.sh"
 echo -e "${blue}Latest Modification${nc} ___ "
 
 
@@ -192,7 +192,7 @@ echo ""
 # Remove a lock on the working directory.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
     --config os=${os} \
     --rerun-incomplete \
     --unlock \
@@ -209,7 +209,7 @@ echo ""
 # List all conda environments and their location on disk.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -228,7 +228,7 @@ echo ""
 # Cleanup unused conda environments.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -249,7 +249,7 @@ echo ""
 # If mamba package manager is not available, or if you still prefer to use conda, you can enforce that with this setting (default: 'mamba').
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -271,7 +271,7 @@ echo ""
 # Do not output any progress or rule information.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
     --cores ${max_threads}\
     --config os=${os} \
     --rerun-incomplete \
@@ -296,7 +296,7 @@ echo ""
 # Print out the shell commands that will be executed.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
     --cores ${max_threads} \
     --max-threads ${max_threads} \
     --config os=${os} \
@@ -325,7 +325,7 @@ for graph in ${graph_list} ; do
     for extention in ${extention_list} ; do
 	snakemake \
 	    --directory ${workdir}/ \
-            --snakefile ${workdir}/workflow/rules/shave.smk \
+            --snakefile ${workdir}/workflow/rules/trimming_test.smk \
             --${graph} | \
 	    dot -T${extention} > \
 		${workdir}/results/10_Graphs/${graph}.${extention} ;
@@ -334,7 +334,7 @@ done
 
 snakemake \
     --directory ${workdir} \
-    --snakefile ${workdir}/workflow/rules/shave.smk \
+    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
     --summary > ${workdir}/results/11_Reports/files_summary.txt
 
 cp ${workdir}/config/config.yaml ${workdir}/results/11_Reports/config.yaml
