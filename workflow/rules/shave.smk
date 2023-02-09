@@ -346,7 +346,7 @@ rule samtools_view:
         region="",  # optional region string
     threads: CPUS
     wrapper:
-        "v1.21.2/bio/samtools/view"
+        "v1.22.0/bio/samtools/view"
 
 ###############################################################################
 rule samtools_sort:
@@ -398,7 +398,7 @@ rule mark_duplicates_spark:
         mem_mb=16000,
     threads: CPUS
     wrapper:
-        "v1.21.2/bio/gatk/markduplicatesspark"
+        "v1.22.0/bio/gatk/markduplicatesspark"
 
 ###############################################################################
 rule SetNmMdAndUqTags:
@@ -480,7 +480,7 @@ rule realignertargetcreator:
         mem_mb=16000,
     threads: CPUS
     wrapper:
-        "v1.21.2/bio/gatk3/realignertargetcreator"
+        "v1.22.0/bio/gatk3/realignertargetcreator"
 
 ###############################################################################
 rule awk_intervals_for_IGV:
@@ -543,7 +543,7 @@ rule indelrealigner:
     resources:
         mem_mb=16000,
     wrapper:
-        "v1.21.2/bio/gatk3/indelrealigner"
+        "v1.22.0/bio/gatk3/indelrealigner"
 
 ###############################################################################
 rule fixmateinformation:
@@ -689,7 +689,7 @@ rule samtools_idxstats:
     params:
         extra="",  # optional params string
     wrapper:
-         "v1.21.2/bio/samtools/idxstats"
+         "v1.22.0/bio/samtools/idxstats"
 
 ###############################################################################
 rule samtools_flagstat:
@@ -702,7 +702,7 @@ rule samtools_flagstat:
     params:
         extra="",  # optional params string
     wrapper:
-        "v1.21.2/bio/samtools/flagstat"
+        "v1.22.0/bio/samtools/flagstat"
 
 ###############################################################################
 rule unifiedgenotyper:
@@ -781,7 +781,7 @@ rule bgzip_vcfs:
     log:
         "results/11_Reports/bgzip/{sample}_{aligner}.vcf.gz.log",
     wrapper:
-        "v1.21.2/bio/bgzip"
+        "v1.22.0/bio/bgzip"
 
 ###############################################################################
 rule indexfeaturefile:
@@ -817,7 +817,7 @@ rule combinegvcfs:
     resources:
         mem_mb=16000,
     wrapper:
-        "v1.21.2/bio/gatk/combinegvcfs"
+        "v1.22.0/bio/gatk/combinegvcfs"
 
 ###############################################################################
 rule variantstotable:
@@ -868,7 +868,7 @@ rule gatk_filter:
     log:
         "results/11_Reports/variantfiltration/merged_hardfiltered.log",
     wrapper:
-        "v1.21.2/bio/gatk/variantfiltration"
+        "v1.22.0/bio/gatk/variantfiltration"
 
 ###############################################################################
 rule multiqc:
@@ -891,7 +891,7 @@ rule multiqc:
     log:
         "results/11_Reports/multiqc/multiqc.log"
     wrapper:
-        "v1.21.2/bio/multiqc"
+        "v1.22.0/bio/multiqc"
 
 ###############################################################################
 rule multiqc_reports_aggregation:

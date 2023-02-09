@@ -20,12 +20,12 @@ echo -e "${green}---------------------------------------------------------------
 echo -e "${green}#####${nc} ${red}ABOUT${nc} ${green}#####${nc}"
 echo -e "${green}-----------------${nc}"
 echo ""
-echo -e "${blue}Name${nc} __________________ Start_trimming.sh"
+echo -e "${blue}Name${nc} __________________ Start_shave.sh"
 echo -e "${blue}Author${nc} ________________ Loïc Talignani"
 echo -e "${blue}Affiliation${nc} ___________ UMR_MIVEGEC"
 echo -e "${blue}Aim${nc} ___________________ Bash script for ${red}SH${nc}ort-read ${red}A${nc}lignment pipeline for ${red}VE${nc}ctors v.1"
-echo -e "${blue}Date${nc} __________________ 2023.01.25"
-echo -e "${blue}Run${nc} ___________________ bash Start_trimming.sh"
+echo -e "${blue}Date${nc} __________________ 2022.10.05"
+echo -e "${blue}Run${nc} ___________________ bash Start_shave.sh"
 echo -e "${blue}Latest Modification${nc} ___ "
 
 
@@ -140,42 +140,6 @@ else
     conda install -c bioconda rename --yes
 fi
 
-# gatk3
-gatk_ver="3.8"
-if ls ~/miniconda3/bin/gatk3 2> /dev/null
-then
-    echo ""
-#   source ${HOME}/miniconda3/etc/profile.d/conda.sh
-else
-
-    conda install -c conda-forge -c bioconda gatk==${gatk_ver} --yes
-fi
-
-# Picard tools
-picard_ver="2.27.4"
-if ls ~/miniconda3/bin/picard 2> /dev/null
-then
-    echo ""
-else
-    conda install -c bioconda picard==${picard_ver} --yes
-fi
-
-###### Rename samples ######
-echo ""
-echo -e "${green}------------------------------------------------------------------------${nc}"
-echo -e "${green}##############${nc} ${red}RENAME FASTQ FILES${nc} ${green}##############${nc}"
-echo -e "${green}------------------------------------------------------------------------${nc}"
-echo ""
-
-# Rename fastq files to remove "_001" Illumina pattern.
-## De/comment (#) if you want keep Illumina barcode-ID and/or Illumina line-ID
-#rename "s/_S\d+_/_/" ${workdir}/resources/reads/*.fastq.gz                 # Remove barcode-ID like {_S001_}
-rename "s/_L\d+_/_/" ${workdir}/resources/reads/*.fastq.gz                  # Remove line-ID ID like {_L001_}
-rename "s/_001.fastq.gz/.fastq.gz/" ${workdir}/resources/reads/*.fastq.gz   # Remove end-name ID like {_001}.fastq.gz
-rename 's/_1.fq.gz/_R1.fastq.gz/' ${workdir}/resources/reads/*.fq.gz        # Add "R" after "1" and change "fq" in "fastq"
-rename 's/_2.fq.gz/_R2.fastq.gz/' ${workdir}/resources/reads/*.fq.gz        # Add "R" after "2" and change "fq" in "fastq"
-#rename 's/(\w_).*_(R[1-2]).*(.fastq.gz)/$1$2$3/' *.fastq.gz                # Keep only expr. in ( )
-
 ###### Call snakemake pipeline ######
 echo ""
 echo -e "${green}------------------------------------------------------------------------${nc}"
@@ -192,7 +156,7 @@ echo ""
 # Remove a lock on the working directory.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+    --snakefile ${workdir}/workflow/rules/shave_mapping.smk \
     --config os=${os} \
     --rerun-incomplete \
     --unlock \
@@ -209,7 +173,7 @@ echo ""
 # List all conda environments and their location on disk.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+    --snakefile ${workdir}/workflow/rules/shave_mapping.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -228,7 +192,7 @@ echo ""
 # Cleanup unused conda environments.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+    --snakefile ${workdir}/workflow/rules/shave_mapping.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -249,7 +213,7 @@ echo ""
 # If mamba package manager is not available, or if you still prefer to use conda, you can enforce that with this setting (default: 'mamba').
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+    --snakefile ${workdir}/workflow/rules/shave_mapping.smk \
     --cores ${max_threads} \
     --config os=${os} \
     --rerun-incomplete \
@@ -271,13 +235,12 @@ echo ""
 # Do not output any progress or rule information.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+    --snakefile ${workdir}/workflow/rules/shave_mapping.smk \
     --cores ${max_threads}\
     --config os=${os} \
     --rerun-incomplete \
     --use-conda \
     --conda-frontend conda \
-    --prioritize multiqc \
     --dry-run \
     --quiet
 
@@ -296,7 +259,7 @@ echo ""
 # Print out the shell commands that will be executed.
 snakemake \
     --directory ${workdir}/ \
-    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+    --snakefile ${workdir}/workflow/rules/shave.smk \
     --cores ${max_threads} \
     --max-threads ${max_threads} \
     --config os=${os} \
@@ -305,7 +268,6 @@ snakemake \
     --latency-wait 240 \
     --use-conda \
     --conda-frontend conda \
-    --prioritize multiqc \
     --printshellcmds
 
 
@@ -325,7 +287,7 @@ for graph in ${graph_list} ; do
     for extention in ${extention_list} ; do
 	snakemake \
 	    --directory ${workdir}/ \
-            --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+            --snakefile ${workdir}/workflow/rules/shave_mapping.smk \
             --${graph} | \
 	    dot -T${extention} > \
 		${workdir}/results/10_Graphs/${graph}.${extention} ;
@@ -334,7 +296,7 @@ done
 
 snakemake \
     --directory ${workdir} \
-    --snakefile ${workdir}/workflow/rules/trimming_test.smk \
+    --snakefile ${workdir}/workflow/rules/sshave_mapping.smk \
     --summary > ${workdir}/results/11_Reports/files_summary.txt
 
 cp ${workdir}/config/config.yaml ${workdir}/results/11_Reports/config.yaml
@@ -354,16 +316,6 @@ echo "Aligner _______________ ${aligner}" >> ${workdir}/results/11_Reports/setti
 echo "Min. Coverage _________ ${min_cov}" >> ${workdir}/results/11_Reports/settings.log                                                     # Log user config minimum coverage
 echo "Min. Allele Frequency _ ${min_af}" >> ${workdir}/results/11_Reports/settings.log                                                      # Log user config snvs cov min
 echo "Start Time ____________ ${time_stamp_start}" >> ${workdir}/results/11_Reports/settings.log                                            # Log analyzes starting time
-
-###### copy multiqc_report.html to results/ dir root ######
-echo ""
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo -e "${blue}#############${nc} ${red}COPY QC REPORT TO ROOT${nc} ${blue}############${nc}"
-echo -e "${blue}------------------------------------------------------------------------${nc}"
-echo ""
-
-# and copy multiqc_report.html to results/ dir root
-#cp ${workdir}/results/00_Quality_Control/MULTIQC/multiqc_report.html ${workdir}/results/multiQC_reports.html
 
 ###### End managment ######
 echo ""

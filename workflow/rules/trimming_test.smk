@@ -37,34 +37,10 @@ TMPDIR = config["resources"]["tmpdir"] # Temporary directory
 FASTQC = config["conda"][OS]["fastqc"]              # FastQC
 FASTQSCREEN = config["conda"][OS]["fastq-screen"]   # Fastq-Screen
 MULTIQC = config["conda"][OS]["multiqc"]            # MultiQC 1.14
-CUTADAPT = config["conda"][OS]["cutadapt"]          # Cutadapt
-SICKLETRIM = config["conda"][OS]["sickle-trim"]     # Sickle-trim
-BOWTIE2 = config["conda"][OS]["bowtie2"]            # Bowtie2
-BWA = config["conda"][OS]["bwa"]                    # Bwa
-SAMTOOLS = config["conda"][OS]["samtools"]          # SamTools
-BEDTOOLS = config["conda"][OS]["bedtools"]          # BedTools
-BCFTOOLS = config["conda"][OS]["bcftools"]          # BcfTools
-GAWK = config["conda"][OS]["gawk"]                  # Gawk
-GATK = config["conda"][OS]["gatk"]                  # GATK 3.6
-GATK4 = config["conda"][OS]["gatk4"]                # GATK 4.3.0
-PICARD = config["conda"][OS]["picard"]              # Picard 2.27.5
-QUALIMAP = config["conda"][OS]["qualimap"]          # Qualimap 2.2.0
 TRIMMOMATIC = config["conda"][OS]["trimmomatic"]    # Trimmomatic 0.39
 
 ###############################################################################
 # PARAMETERS #
-# CUTADAPT:
-LENGTHc = config["cutadapt"]["length"]                      # Cutadapt --minimum-length
-TRUSEQ_FOR = config["cutadapt"]["kits"]["truseq_for"]       # Cutadapt --adapter Illumina TruSeq
-TRUSEQ_REV = config["cutadapt"]["kits"]["truseq_rev"]       # Cutadapt --adapter Illumina TruSeq
-NEXTERA = config["cutadapt"]["kits"]["nextera"]             # Cutadapt --adapter Illumina Nextera
-SMALL = config["cutadapt"]["kits"]["small"]                 # Cutadapt --adapter Illumina Small
-
-# SICKLE-TRIM:
-COMMAND = config["sickle-trim"]["command"]          # Sickle-trim command
-ENCODING = config["sickle-trim"]["encoding"]        # Sickle-trim --qual-type
-QUALITY = config["sickle-trim"]["quality"]          # Sickle-trim --qual-threshold
-LENGTH = config["sickle-trim"]["length"]            # Sickle-trim --length-treshold
 
 # TRIMMOMATIC:
 TRUSEQ2_PE: config['trimmomatic']["adapters"]["truseq2-pe"]     # Truseq2-PE adapters fasta
@@ -80,20 +56,6 @@ SUBSET = config["fastq-screen"]["subset"]           # Fastq-screen --subset
 TRIMMER = config["trimmer"]                         # Trimmers ('sickle' or 'trimmomatic')
 ALIGNER = config["aligner"]                         # Aligners ('bwa' or 'bowtie2')
 MARKDUP = config["markdup"]                         # Mark Duplicate Program ('picard' or 'samtools')
-
-BWAPATH = config["bwa"]["path"]                     # BWA path to indexes
-BT2PATH = config["bowtie2"]["path"]                 # Bowtie2 path to indexes
-SENSITIVITY = config["bowtie2"]["sensitivity"]      # Bowtie2 sensitivity preset
-
-REFPATH = config["path"]                            # Path to genomes references
-REFERENCE = config["reference"]                     # Genome reference sequence, in fasta format
-INDEX = config["index"]                             # Genome reference index, in .fai format
-DICTIONARY = config["dictionary"]                  # Genome reference dictionary, made w/ picard CreateSequenceDictionary, in .dict format
-
-ALLELES = config["alleles"]["alleles_target"]       # Alleles against which to genotype (VCF format) 
-MINCOV = config["consensus"]["mincov"]              # Minimum coverage, mask lower regions with 'N'
-MINAF = config["consensus"]["minaf"]                # Minimum allele frequency allowed
-IUPAC = config["consensus"]["iupac"]                # Output variants in the form of IUPAC ambiguity codes
 
 ###############################################################################
 # FUNCTIONS AND COMMANDS #
@@ -112,10 +74,10 @@ rule all:
     input:
         fastqc          = "results/00_Quality_Control/fastqc/", #expand("results/00_Quality_Control/fastqc/{sample}_fastqc.html", sample=SAMPLE),
         trimmed_fastqc  = "results/00_Quality_Control/trimmed_fastqc/",
-        forward_reads   = expand("results/01_Trimming/sickle/{sample}_sickle-trimmed_R1.fastq.gz", sample=SAMPLE),
-        reverse_reads   = expand("results/01_Trimming/sickle/{sample}_sickle-trimmed_R2.fastq.gz", sample=SAMPLE),
-        #forwardUnpaired = expand("results/01_Trimmimg/trimmomatic/{sample}_trimmomatic_unpaired_R1.fastq.gz", sample=SAMPLE),
-        #reverseUnpaired = expand("results/01_Trimmimg/trimmomatic/{sample}_trimmomatic_unpaired_R2.fastq.gz", sample=SAMPLE),
+        forward_reads   = expand("results/01_Trimmimg/trimmomatic/{sample}_trimmomatic_R1.fastq.gz", sample=SAMPLE),
+        reverse_reads   = expand("results/01_Trimmimg/trimmomatic/{sample}_trimmomatic_R2.fastq.gz", sample=SAMPLE),
+        forwardUnpaired = expand("results/01_Trimmimg/trimmomatic/{sample}_trimmomatic_unpaired_R1.fastq.gz", sample=SAMPLE),
+        reverseUnpaired = expand("results/01_Trimmimg/trimmomatic/{sample}_trimmomatic_unpaired_R2.fastq.gz", sample=SAMPLE),
         fastqscreen     = "results/00_Quality_Control/fastq-screen/",
         multiqc         = "results/00_Quality_Control/MULTIQC/multiqc_report.html",
 
@@ -176,84 +138,6 @@ rule fastqscreen_contamination_checking:
         "--outdir {output.fastqscreen} " # Output directory
         "{input.fastq}/*.fastq.gz "      # Input file.fastq
         "&> {log}"                       # Log redirection
-
-###############################################################################
-rule cutadapt_adapters_removing:
-    # Aim: finds and removes adapter sequences, primers, poly-A tails and other types of unwanted sequence from your high-throughput sequencing reads
-    # Use: cutadapt [OPTIONS] -a/-A [ADAPTER] -o [OUT-FWD.fastq.gz] -p [OUT-REV.fastq.gz] [IN-FWD.fastq.gz] [IN-REV.fastq.gz]
-    # Rmq: multiple adapter sequences can be given using further -a options, but only the best-matching adapter will be removed
-    message:
-        "Cutadapt adapters removing for {wildcards.sample} sample"
-    conda:
-        CUTADAPT
-    resources:
-        cpus = CPUS
-    params:
-        length = LENGTHc,
-        truseq_for = TRUSEQ_FOR,
-        truseq_rev = TRUSEQ_REV,
-        nextera = NEXTERA,
-        small = SMALL
-    input:
-        fwdreads = "resources/reads/{sample}_R1.fastq.gz",
-        revreads = "resources/reads/{sample}_R2.fastq.gz"
-    output:
-        fwdreads = temp("results/01_Trimming/cutadapt/{sample}_cutadapt-removed_R1.fastq.gz"),
-        revreads = temp("results/01_Trimming/cutadapt/{sample}_cutadapt-removed_R2.fastq.gz")
-    log:
-        "results/11_Reports/cutadapt/{sample}.log"
-    shell:
-       "cutadapt "                           # Cutadapt, finds and removes unwanted sequence from your HT-seq reads
-        "-j {resources.cpus} "               # -j: Number of CPU cores to use. Use 0 to auto-detect (default: 1)
-        "--trim-n "                          # --trim-n: Trim N's on ends of reads
-        "--minimum-length {params.length} "  # -m: Discard reads shorter than length
-        "--adapter {params.truseq_for} "     # -a: Sequence of an adapter ligated to the 3' end of the first read
-        "-A {params.truseq_rev} "            # -A: 3' adapter to be removed from second read in a pair
-        "--adapter {params.nextera} "        # -a: Sequence of an adapter ligated to the 3' end of the first read
-        "-A {params.nextera} "               # -A: 3' adapter to be removed from second read in a pair
-        "--adapter {params.small} "          # -a: Sequence of an adapter ligated to the 3' end of the first read
-        "-A {params.small} "                 # -A: 3' adapter to be removed from second read in a pair
-        "--output {output.fwdreads} "        # -o: Write trimmed reads to FILE
-        "--paired-output {output.revreads} " # -p: Write second read in a pair to FILE
-        "{input.fwdreads} "                  # Input forward reads R1.fastq
-        "{input.revreads} "                  # Input reverse reads R2.fastq
-        "&> {log}"                           # Log redirection
-
-###############################################################################
-rule sickle_trim_quality:
-    # Aim: windowed adaptive trimming tool for FASTQ files using quality
-    # Use: sickle [COMMAND] [OPTIONS]
-    message:
-        "Sickle-trim low quality sequences trimming for {wildcards.sample} sample"
-    conda:
-        SICKLETRIM
-    params:
-        command = COMMAND,
-        encoding = ENCODING,
-        quality = QUALITY,
-        length = LENGTH
-    input:
-        fwdreads = "results/01_Trimming/cutadapt/{sample}_cutadapt-removed_R1.fastq.gz",
-        revreads = "results/01_Trimming/cutadapt/{sample}_cutadapt-removed_R2.fastq.gz"
-    output:
-        fwdreads = "results/01_Trimming/sickle/{sample}_sickle-trimmed_R1.fastq.gz",
-        revreads = "results/01_Trimming/sickle/{sample}_sickle-trimmed_R2.fastq.gz",
-        single = temp("results/01_Trimming/sickle/{sample}_sickle-trimmed_SE.fastq.gz")
-    log:
-        "results/11_Reports/sickle-trim/{sample}.log"
-    shell:
-       "sickle "                 # Sickle, a windowed adaptive trimming tool for FASTQ files using quality
-        "{params.command} "      # Paired-end or single-end sequence trimming
-        "-t {params.encoding} "  # --qual-type: Type of quality values, solexa ; illumina ; sanger ; CASAVA, < 1.3 ; 1.3 to 1.7 ; >= 1.8
-        "-q {params.quality} "   # --qual-threshold: Threshold for trimming based on average quality in a window (default: 20)
-        "-l {params.length} "    # --length-threshold: Threshold to keep a read based on length after trimming (default: 20)
-        "-f {input.fwdreads} "   # --pe-file1: Input paired-end forward fastq file
-        "-r {input.revreads} "   # --pe-file2: Input paired-end reverse fastq file
-        "-g "                    # --gzip-output: Output gzipped files
-        "-o {output.fwdreads} "  # --output-pe1: Output trimmed forward fastq file
-        "-p {output.revreads} "  # --output-pe2: Output trimmed reverse fastq file (must use -s option)
-        "-s {output.single} "    # --output-single: Output trimmed singles fastq file
-        "&> {log}"               # Log redirection
 
 ###############################################################################
 rule trimmomatic:
